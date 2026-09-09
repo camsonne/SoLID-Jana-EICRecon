@@ -117,4 +117,21 @@ expect to iterate on them the first time they are loaded.
 
 ## Results
 
-See [`results/RESULTS.md`](results/RESULTS.md) for the tables and figures of the luminosity scan.
+Full tables and figures: [`results/RESULTS.md`](results/RESULTS.md). Six configurations were run
+(luminosities 1.2×10³⁷, 10³⁸, 10³⁹ cm⁻² s⁻¹ × strip/pixel GEM readout, 10 000 events each, 2000 for
+the saturated strip configurations):
+
+* **Pixel readout (1 mm² pads)** tracks the DDVCS missing mass with a Gaussian-core resolution of
+  **56–60 MeV²** essentially flat from 1.2×10³⁷ to 10³⁹ cm⁻² s⁻¹ (σ(M_X) ≈ 30 MeV). The fraction of
+  geometrically-accepted events with e′, μ⁺ and μ⁻ all reconstructed falls from 0.82 to 0.73 as GEM
+  occupancy grows with luminosity.
+* **Strip readout (0.4 mm pitch, up to 100 cm length)** is background-limited in this model: the
+  channel occupancy at the inner radius of GEM plane 2 is already ≈ 0.15 at 1.2×10³⁷ (comparable
+  resolution to pixel, 56 MeV²) but reaches ≈ 1.2 at 10³⁸ and ≈ 12 at 10³⁹, so cluster overlap
+  destroys the real hits faster than tracks can be found: efficiency drops to 0.04 at 10³⁸ and 0 at
+  10³⁹ cm⁻² s⁻¹. At the highest SoLID DDVCS luminosities this points to finer segmentation
+  (shorter strips or pixels) rather than the SIDIS-style long strips.
+
+These numbers depend on the background-rate parametrisation in `BackgroundModel` (order-of-magnitude
+estimate, see the source comment and `config/gem_background_rates.txt`); rerun the scan with rates
+from a dedicated `solid_gemc` background study to refine them.
