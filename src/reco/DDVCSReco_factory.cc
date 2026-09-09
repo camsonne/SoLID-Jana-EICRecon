@@ -49,9 +49,9 @@ void DDVCSReco_factory::Process(const JEvent& event) {
     const auto& e = *mcs[i_e]; const auto& mm = *mcs[i_mum]; const auto& mp = *mcs[i_mup];
     Kin kt = kinematics(Ebeam, e.p4, mp.p4, mm.p4);
     ev->mm2_true = kt.mm2; ev->Q2_true = kt.Q2; ev->xB_true = kt.xB; ev->Qp2_true = kt.Qp2; ev->t_true = kt.t;
-    ev->accepted_true = (e.hits_faec || e.hits_laec) && (mm.hits_fa_muon || mm.hits_la_muon) &&
-                        (mp.hits_fa_muon || mp.hits_la_muon) && e.n_gem_hits >= 4 && mm.n_gem_hits >= 4 &&
-                        mp.n_gem_hits >= 4;
+    ev->geom_accepted = (e.hits_faec || e.hits_laec) && (mm.hits_fa_muon || mm.hits_la_muon) &&
+                        (mp.hits_fa_muon || mp.hits_la_muon);
+    ev->accepted_true = ev->geom_accepted && e.n_gem_hits >= 4 && mm.n_gem_hits >= 4 && mp.n_gem_hits >= 4;
   }
 
   // candidate selection

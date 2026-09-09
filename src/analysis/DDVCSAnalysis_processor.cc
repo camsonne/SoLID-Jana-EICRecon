@@ -53,7 +53,7 @@ DDVCSAnalysis_processor::DDVCSAnalysis_processor() {
 
 void DDVCSAnalysis_processor::Init() {
   m_out.open(m_csv());
-  m_out << "event,Q2_true,xB_true,Qp2_true,t_true,accepted,found,all_matched,mm2,mm2_true,Q2,Qp2,t,"
+  m_out << "event,Q2_true,xB_true,Qp2_true,t_true,geom_accepted,accepted,found,all_matched,mm2,mm2_true,Q2,Qp2,t,"
            "pe_true,pe_reco,the_true,the_reco,pmup_true,pmup_reco,pmum_true,pmum_reco,"
            "ntracks,nhits_e,nhits_mup,nhits_mum,nbkg_e,nbkg_mup,nbkg_mum,chi2ndf_e,chi2ndf_mup,chi2ndf_mum\n";
   m_out << std::setprecision(7);
@@ -68,6 +68,8 @@ void DDVCSAnalysis_processor::ProcessSequential(const JEvent& event) {
   if (!m_gen_in().empty()) m_lumi = m_gen_in()[0]->luminosity;
 
   ++m_n_events;
+  if (ev.geom_accepted) ++m_n_geom;
+  if (ev.geom_accepted && ev.found) ++m_n_found_geom;
   if (ev.accepted_true) ++m_n_accepted;
   if (ev.found) ++m_n_found;
   if (ev.found && ev.accepted_true) ++m_n_found_accepted;
@@ -110,7 +112,7 @@ void DDVCSAnalysis_processor::ProcessSequential(const JEvent& event) {
 
   auto tv = [](const Track* t, auto f, double def = 0) { return t ? f(t) : def; };
   m_out << event.GetEventNumber() << "," << ev.Q2_true << "," << ev.xB_true << "," << ev.Qp2_true << "," << ev.t_true << ","
-        << ev.accepted_true << "," << ev.found << "," << ev.all_matched << "," << ev.mm2 << "," << ev.mm2_true << ","
+        << ev.geom_accepted << "," << ev.accepted_true << "," << ev.found << "," << ev.all_matched << "," << ev.mm2 << "," << ev.mm2_true << ","
         << ev.Q2 << "," << ev.Qprime2 << "," << ev.t << ","
         << (me ? me->p4.p.mag() : 0) << "," << tv(te, [](const Track* t) { return t->p(); }) << ","
         << (me ? me->p4.p.theta() : 0) << "," << tv(te, [](const Track* t) { return t->params.theta; }) << ","
@@ -140,6 +142,10 @@ void DDVCSAnalysis_processor::Finish() {
   js << "  \"label\": \"" << m_label() << "\",\n";
   js << "  \"luminosity\": " << m_lumi << ",\n";
   js << "  \"n_events\": " << m_n_events << ",\n";
+  js << "  \"n_geom_accepted\": " << m_n_geom << ",\n";
+  js << "  \"n_found_geom_accepted\": " << m_n_found_geom << ",\n";
+  js << "  \"geometric_acceptance\": " << (m_n_events ? double(m_n_geom) / m_n_events : 0) << ",\n";
+  js << "  \"efficiency_vs_geometric_acceptance\": " << (m_n_geom ? double(m_n_found_geom) / m_n_geom : 0) << ",\n";
   js << "  \"n_accepted_true\": " << m_n_accepted << ",\n";
   js << "  \"n_found\": " << m_n_found << ",\n";
   js << "  \"n_found_and_accepted\": " << m_n_found_accepted << ",\n";

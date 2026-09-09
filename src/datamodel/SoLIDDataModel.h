@@ -186,7 +186,8 @@ struct DDVCSEvent : public JObject {
   double Q2 = 0, xB = 0, Qprime2 = 0, t = 0, W = 0;  // reconstructed kinematics
   double mm2_true = 0;         // from truth four-vectors (should equal Mp^2)
   double Q2_true = 0, xB_true = 0, Qp2_true = 0, t_true = 0;
-  bool accepted_true = false;  // all three true leptons within detector acceptance
+  bool accepted_true = false;  // all three true leptons within acceptance with >= 4 GEM hits each
+  bool geom_accepted = false;  // all three true leptons reach their PID detectors (no GEM-hit requirement)
   bool all_matched = false;    // the three reco tracks are matched to the right truth particles
 
   void Summarize(JObjectSummary& s) const override {

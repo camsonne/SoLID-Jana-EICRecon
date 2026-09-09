@@ -42,7 +42,7 @@ private:
   Parameter<std::string> m_label{this, "analysis:label", "", "Free-text label stored in the summary"};
 
   std::ofstream m_out;
-  long m_n_events = 0, m_n_accepted = 0, m_n_found = 0, m_n_found_accepted = 0, m_n_all_matched = 0;
+  long m_n_events = 0, m_n_geom = 0, m_n_found_geom = 0, m_n_accepted = 0, m_n_found = 0, m_n_found_accepted = 0, m_n_all_matched = 0;
   long m_n_tracks = 0, m_n_tracks_with_bkg = 0, m_n_fake_tracks = 0;
   Stats m_mm2, m_mm, m_mm2_clean, m_dpp_e, m_dpp_mu, m_dth_e, m_dth_mu, m_dph_mu, m_dQ2, m_dQp2, m_dt, m_chi2ndf, m_dzv;
   double m_lumi = 0;
