@@ -1,0 +1,81 @@
+<lccdd>
+  <!-- SoLID GEM tracker, DDVCS variant (solid_gemc geometry/gem_moved/solid_SIDIS_DDVCS_gem):
+       same z and Rin as the SIDIS/J/psi long-endcap layout, Rout of planes 1-4 extended to 135 cm.
+       Module stack follows solid_dd4hep compact/GEM_sidis.xml (SoLID_TrapEndcapTracker). -->
+  <detectors>
+    <detector id="9" name="GEMSubAssembly" type="DD4hep_SubdetectorAssembly" vis="TrackerSubAssemblyVis">
+      <composite name="DummyGEMTracker_DDVCS"/>
+      <composite name="GEMTracker_DDVCS"/>
+    </detector>
+    <detector id="1" name="DummyGEMTracker_DDVCS" type="SoLID_CompositeTracker" actsType="endcap" vis="TrackerSubAssemblyVis">
+      <type_flags type="DetType_TRACKER + DetType_ENDCAP"/>
+      <position x="0*cm" y="0*cm" z="-1*um"/>
+    </detector>
+    <detector id="2" name="GEMTracker_DDVCS" type="SoLID_TrapEndcapTracker" actsType="endcap"
+              readout="GEMTrackerHits" vis="GEM_TrackerDiscVis" reflect="false">
+      <type_flags type="DetType_TRACKER + DetType_ENDCAP"/>
+      <module name="Module1" vis="GEM_TrackerModuleVis">
+        <module_component name="entrance_window" material="Aluminum" thickness="0.050*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="honeycomb_g10_1" material="G10" thickness="0.125*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="honeycomb_nomex_1" material="Air" thickness="3.0*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="drift_cathode" material="Kapton" thickness="0.100*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="drift_gas1" material="GEMGas" thickness="3.0*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="gem_foil_1" material="Kapton" thickness="0.100*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="drift_gas2" material="GEMGas" thickness="2.0*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="gem_foil_2" material="Kapton" thickness="0.100*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="drift_gas3" material="GEMGas" thickness="2.0*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="gem_foil_3" material="Kapton" thickness="0.100*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="drift_gas4" material="GEMGas" thickness="2.0*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="u_readout_plane" material="Kapton" thickness="0.200*mm" sensitive="true" vis="GEM_TrackerDiscVis"/>
+        <module_component name="readout_g10" material="G10" thickness="0.180*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="honeycomb_nomex_2" material="Air" thickness="3.0*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="honeycomb_g10_2" material="G10" thickness="0.125*mm" vis="GEM_TrackerDiscVis"/>
+        <module_component name="exit_window" material="Aluminum" thickness="0.050*mm" vis="GEM_TrackerDiscVis"/>
+      </module>
+      <layer id="1" zstart="-175*cm" rmin="39*cm" rmax="135*cm" phi0="0*deg" nmodules="30" vis="GEM_TrackerLayerVis">
+        <module name="Module1"/>
+        <layer_material surface="inner" binning="binPhi,binR" bins0="30" bins1="30"/>
+        <layer_material surface="outer" binning="binPhi,binR" bins0="30" bins1="30"/>
+      </layer>
+      <layer id="2" zstart="-150*cm" rmin="21*cm" rmax="135*cm" phi0="0*deg" nmodules="24" vis="GEM_TrackerLayerVis">
+        <module name="Module1"/>
+        <layer_material surface="inner" binning="binPhi,binR" bins0="24" bins1="30"/>
+        <layer_material surface="outer" binning="binPhi,binR" bins0="24" bins1="30"/>
+      </layer>
+      <layer id="3" zstart="-119*cm" rmin="25*cm" rmax="135*cm" phi0="0*deg" nmodules="21" vis="GEM_TrackerLayerVis">
+        <module name="Module1"/>
+        <layer_material surface="inner" binning="binPhi,binR" bins0="21" bins1="30"/>
+        <layer_material surface="outer" binning="binPhi,binR" bins0="21" bins1="30"/>
+      </layer>
+      <layer id="4" zstart="-68*cm" rmin="32*cm" rmax="135*cm" phi0="0*deg" nmodules="21" vis="GEM_TrackerLayerVis">
+        <module name="Module1"/>
+        <layer_material surface="inner" binning="binPhi,binR" bins0="21" bins1="30"/>
+        <layer_material surface="outer" binning="binPhi,binR" bins0="21" bins1="30"/>
+      </layer>
+      <layer id="5" zstart="5*cm" rmin="42*cm" rmax="99*cm" phi0="0*deg" nmodules="29" vis="GEM_TrackerLayerVis">
+        <module name="Module1"/>
+        <layer_material surface="inner" binning="binPhi,binR" bins0="29" bins1="30"/>
+        <layer_material surface="outer" binning="binPhi,binR" bins0="29" bins1="30"/>
+      </layer>
+      <layer id="6" zstart="92*cm" rmin="53*cm" rmax="122*cm" phi0="0*deg" nmodules="25" vis="GEM_TrackerLayerVis">
+        <module name="Module1"/>
+        <layer_material surface="inner" binning="binPhi,binR" bins0="25" bins1="30"/>
+        <layer_material surface="outer" binning="binPhi,binR" bins0="25" bins1="30"/>
+      </layer>
+    </detector>
+  </detectors>
+
+  <plugins>
+    <plugin name="DD4hep_ParametersPlugin">
+      <argument value="GEMTracker_DDVCS"/>
+      <argument value="layer_pattern: str=GEMTracker_DDVCS_layer\d"/>
+    </plugin>
+  </plugins>
+
+  <readouts>
+    <readout name="GEMTrackerHits">
+      <segmentation type="CartesianGridXZ" grid_size_x="1*mm" grid_size_z="1*mm"/>
+      <id>system:8,layer:5,module:16,sensor:3,x:32:-16,z:-16</id>
+    </readout>
+  </readouts>
+</lccdd>

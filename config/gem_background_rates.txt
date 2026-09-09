@@ -1,0 +1,13 @@
+# GEM background hit-rate parametrisation for the SoLID J/psi-DDVCS configuration.
+# rho_i(R) = rho0_i * (R0/R)^alpha_i * (L / 1.2e37),  R0 = 40 cm,  rho0 in kHz/mm^2
+# The defaults below are the values compiled into solid::BackgroundModel (order of magnitude of
+# the SoLID pCDR estimates: ~1 kHz/mm^2 at the inner edge of the upstream planes at 1.2e37).
+# Replace them with the output of a dedicated solid_gemc background run and pass the file with
+#   -Pgem:background_file=config/gem_background_rates.txt
+# plane  rho0_kHz_per_mm2  alpha
+1  1.0  2.0
+2  1.0  2.0
+3  0.8  2.0
+4  0.6  2.0
+5  0.5  2.0
+6  0.4  2.0

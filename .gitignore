@@ -1,0 +1,9 @@
+build/
+install/
+*.o
+*.so
+*.hepmc
+*.root
+__pycache__/
+*.log
+results/*_events.csv

@@ -1,0 +1,93 @@
+<lccdd>
+  <info name="solid_ddvcs" title="SoLID DDVCS configuration"
+        author="SoLID-Jana-EICRecon"
+        status="development"
+        version="v0.1 2026-09">
+    <comment>
+      SoLID in the J/psi / DDVCS configuration: 15 cm LH2 target at z = -315 cm, DDVCS GEM
+      tracker (planes 1-4 extended to Rout = 135 cm), LGC, HGC, LAEC, FAEC, SPD, MRPC and the
+      DDVCS muon detector (iron/scintillator). Detector construction plugins (SoLID_*) come from
+      JeffersonLab/solid_dd4hep (libsolid_dd4hep); set SOLID_DD4HEP to its checkout / install
+      share directory and DETECTOR_PATH to this geometry directory.
+    </comment>
+  </info>
+
+  <std_conditions type="NTP"/>
+
+  <define>
+    <include ref="${DD4hepINSTALL}/DDDetectors/compact/detector_types.xml"/>
+    <constant name="world_side" value="12*m"/>
+    <constant name="world_x" value="world_side"/>
+    <constant name="world_y" value="world_side"/>
+    <constant name="world_z" value="world_side"/>
+    <constant name="tracker_region_zmax" value="4*m"/>
+    <constant name="tracker_region_rmax" value="2*m"/>
+    <constant name="PhotMomWaveConv" value="1243.125*eV"/>
+    <!-- DDVCS / J/psi target position -->
+    <constant name="Target_z" value="-315*cm"/>
+    <constant name="Target_half_length" value="7.5*cm"/>
+  </define>
+
+  <includes>
+    <gdmlFile ref="${DD4hepINSTALL}/DDDetectors/compact/elements.xml"/>
+    <file ref="${SOLID_DD4HEP}/compact/materials.xml"/>
+    <file ref="${SOLID_DD4HEP}/compact/optics.xml"/>
+    <file ref="${DETECTOR_PATH}/compact/materials_ddvcs.xml"/>
+  </includes>
+
+  <limits>
+    <limitset name="world_limits"/>
+    <limitset name="cal_limits">
+      <limit name="step_length_max" particles="*" value="5.0*mm"/>
+    </limitset>
+  </limits>
+
+  <regions>
+    <region name="world_region" eunit="MeV" lunit="mm" cut="0.001" threshold="0.001">
+      <limitsetref name="world_limits"/>
+    </region>
+  </regions>
+
+  <display>
+    <include ref="${SOLID_DD4HEP}/compact/colors.xml"/>
+    <include ref="${SOLID_DD4HEP}/compact/display.xml"/>
+    <vis name="TargetVis"   alpha="0.6" r="0.9" g="0.1" b="0.1" showDaughters="true" visible="true"/>
+    <vis name="MuonIronVis" alpha="0.4" r="0.3" g="0.3" b="0.9" showDaughters="true" visible="true"/>
+    <vis name="MuonScintVis" alpha="0.8" r="1.0" g="0.2" b="0.2" showDaughters="true" visible="true"/>
+    <vis name="SPDVis"      alpha="0.8" r="0.2" g="0.9" b="0.2" showDaughters="true" visible="true"/>
+    <vis name="MRPCVis"     alpha="0.8" r="0.9" g="0.9" b="0.2" showDaughters="true" visible="true"/>
+  </display>
+
+  <!-- CLEO-II solenoid field map (solid_gemc solenoid_CLEOv9.dat via SoLID_FieldMapB) -->
+  <include ref="${SOLID_DD4HEP}/compact/fields.xml"/>
+
+  <detectors>
+    <include ref="${DETECTOR_PATH}/compact/target_LH2_ddvcs.xml"/>
+    <include ref="${DETECTOR_PATH}/compact/GEM_ddvcs.xml"/>
+    <include ref="${SOLID_DD4HEP}/compact/LGC.xml"/>
+    <include ref="${SOLID_DD4HEP}/compact/HGC.xml"/>
+    <include ref="${SOLID_DD4HEP}/compact/LAEC.xml"/>
+    <include ref="${SOLID_DD4HEP}/compact/FAEC.xml"/>
+    <include ref="${DETECTOR_PATH}/compact/SPD_MRPC_ddvcs.xml"/>
+    <include ref="${DETECTOR_PATH}/compact/muon_ddvcs.xml"/>
+  </detectors>
+
+  <readouts>
+    <readout name="LAEC_PrShHits">
+      <segmentation type="NoSegmentation"/>
+      <id>system:8,module:20,layer:10,slice:5,x:48:-8,y:-8</id>
+    </readout>
+    <readout name="LAEC_ShHits">
+      <segmentation type="NoSegmentation"/>
+      <id>system:8,module:20,layer:10,slice:5,x:48:-8,y:-8</id>
+    </readout>
+    <readout name="FAEC_PrShHits">
+      <segmentation type="NoSegmentation"/>
+      <id>system:8,module:20,layer:10,slice:5,x:48:-8,y:-8</id>
+    </readout>
+    <readout name="FAEC_ShHits">
+      <segmentation type="NoSegmentation"/>
+      <id>system:8,module:20,layer:10,slice:5,x:48:-8,y:-8</id>
+    </readout>
+  </readouts>
+</lccdd>

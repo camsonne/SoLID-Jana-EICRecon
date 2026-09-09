@@ -1,0 +1,32 @@
+<lccdd>
+  <!-- Scintillator pad detectors and forward MRPC (solid_gemc spd_moved / mrpc_moved positions) -->
+  <detectors>
+    <detector id="20" name="SPDLargeAngle" type="DD4hep_DiskTracker" readout="SPDHits" vis="SPDVis" reflect="false">
+      <layer id="1" inner_r="80*cm" outer_r="135*cm" inner_z="-66*cm">
+        <slice material="MuonScintillator" thickness="2*cm" sensitive="yes"/>
+      </layer>
+    </detector>
+    <detector id="21" name="SPDForwardAngle" type="DD4hep_DiskTracker" readout="SPDHits" vis="SPDVis" reflect="false">
+      <layer id="2" inner_r="93*cm" outer_r="216*cm" inner_z="428*cm">
+        <slice material="MuonScintillator" thickness="0.5*cm" sensitive="yes"/>
+      </layer>
+    </detector>
+    <detector id="22" name="MRPCForwardAngle" type="DD4hep_DiskTracker" readout="MRPCHits" vis="MRPCVis" reflect="false">
+      <layer id="1" inner_r="93*cm" outer_r="216*cm" inner_z="435*cm">
+        <slice material="MRPCGlass" thickness="0.6*cm"/>
+        <slice material="Air" thickness="0.3*cm" sensitive="yes"/>
+        <slice material="MRPCGlass" thickness="0.6*cm"/>
+      </layer>
+    </detector>
+  </detectors>
+  <readouts>
+    <readout name="SPDHits">
+      <segmentation type="CartesianGridXY" grid_size_x="5*cm" grid_size_y="5*cm"/>
+      <id>system:8,layer:4,x:32:-16,y:-16</id>
+    </readout>
+    <readout name="MRPCHits">
+      <segmentation type="CartesianGridXY" grid_size_x="2.5*cm" grid_size_y="2.5*cm"/>
+      <id>system:8,layer:4,x:32:-16,y:-16</id>
+    </readout>
+  </readouts>
+</lccdd>

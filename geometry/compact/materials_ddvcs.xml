@@ -1,0 +1,18 @@
+<materials>
+  <!-- Additional materials for the DDVCS configuration -->
+  <material name="LiquidHydrogen">
+    <D type="density" value="0.0708" unit="g/cm3"/>
+    <composite n="1" ref="H"/>
+  </material>
+  <material name="MuonScintillator">
+    <!-- polyvinyltoluene, G4_PLASTIC_SC_VINYLTOLUENE equivalent -->
+    <D type="density" value="1.032" unit="g/cm3"/>
+    <composite n="9" ref="C"/>
+    <composite n="10" ref="H"/>
+  </material>
+  <material name="MRPCGlass">
+    <D type="density" value="2.5" unit="g/cm3"/>
+    <composite n="1" ref="Si"/>
+    <composite n="2" ref="O"/>
+  </material>
+</materials>

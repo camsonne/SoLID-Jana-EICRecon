@@ -1,0 +1,22 @@
+<lccdd>
+  <!-- J/psi / DDVCS liquid hydrogen target (solid_gemc geometry/target/solid_JPsi_target_LH2):
+       15 cm long, 1.8872 cm inner radius Al cell (0.0178 cm wall, 0.0051 cm windows), centred at Target_z -->
+  <detectors>
+    <detector id="40" name="TargetCellWall" type="DD4hep_TubeSegment" vis="TargetVis" material="Aluminum">
+      <tubs rmin="1.8872*cm" rmax="1.905*cm" zhalf="Target_half_length + 0.0102*cm"/>
+      <position x="0" y="0" z="Target_z"/>
+    </detector>
+    <detector id="41" name="TargetWindowUp" type="DD4hep_TubeSegment" vis="TargetVis" material="Aluminum">
+      <tubs rmin="0*cm" rmax="1.8872*cm" zhalf="0.0051*cm"/>
+      <position x="0" y="0" z="Target_z - Target_half_length - 0.0051*cm"/>
+    </detector>
+    <detector id="42" name="TargetWindowDown" type="DD4hep_TubeSegment" vis="TargetVis" material="Aluminum">
+      <tubs rmin="0*cm" rmax="1.8872*cm" zhalf="0.0051*cm"/>
+      <position x="0" y="0" z="Target_z + Target_half_length + 0.0051*cm"/>
+    </detector>
+    <detector id="43" name="TargetLH2" type="DD4hep_TubeSegment" vis="TargetVis" material="LiquidHydrogen">
+      <tubs rmin="0*cm" rmax="1.8872*cm" zhalf="Target_half_length"/>
+      <position x="0" y="0" z="Target_z"/>
+    </detector>
+  </detectors>
+</lccdd>
