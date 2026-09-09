@@ -62,6 +62,7 @@ private:
   Parameter<double> m_zv_sigma{this, "tracking:zv_prior_cm", 6.0, "Vertex-z prior width (target length / sqrt(12) inflated) [cm]"};
   Parameter<double> m_pmin{this, "tracking:pmin", 0.3, "Minimum seed momentum [GeV]"};
   Parameter<int> m_max_hits_plane{this, "tracking:max_hits_per_plane", 600, "Planes with more hits than this (saturated readout) are not used for seeding"};
+  Parameter<int> m_max_seeds{this, "tracking:max_seeds_per_cluster", 40, "Seed-plane hits tried per calorimeter cluster (closest to the cluster-target straight line first)"};
   Parameter<int> m_max_fits{this, "tracking:max_fits_per_seed_cluster", 6, "Number of best candidates fitted per calorimeter cluster"};
   Parameter<bool> m_use_ec{this, "tracking:use_ec_seed", true, "Seed with calorimeter clusters when available"};
   Parameter<double> m_step{this, "tracking:rk_step_cm", 2.0, "RK4 step [cm]"};

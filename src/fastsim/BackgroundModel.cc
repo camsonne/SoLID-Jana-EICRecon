@@ -65,7 +65,7 @@ void BackgroundModel::generateInRoad(int plane, double x, double y, double w, st
   const auto& g = m_geo->gemPlane(plane);
   const double area = 4 * w * w;
   const double n_real = hitDensity(plane, R) * area;
-  const double n_ghost = std::min(ghostDensity(plane, R) * area, 500.0);
+  const double n_ghost = std::min(ghostDensity(plane, R) * area, 200.0);
   std::uniform_real_distribution<double> U(-w, w);
   auto make = [&](int n_mean, bool ghost) {
     std::poisson_distribution<int> P(n_mean);

@@ -309,6 +309,13 @@ void TrackFinder_factory::Process(const JEvent& event) {
       for (int pl : seed_planes) {
         if (static_cast<int>(by_plane[pl].size()) > m_max_hits_plane()) continue;  // saturated plane
         std::vector<Candidate> cands;
+        // seed-plane hits passing the prefilters, ranked by the distance to the straight line
+        // from the target centre to the calorimeter cluster (a cheap road); only the best
+        // tracking:max_seeds_per_cluster are tried, which bounds the cost on saturated planes
+        const double zpl = m_geo->gemPlane(pl).z;
+        const double fline = (zpl - ztgt) / (ec->z - ztgt);
+        const double xl = ec->x * fline, yl = ec->y * fline;
+        std::vector<std::pair<double, int>> ranked;
         for (int idx : by_plane[pl]) {
           if (used[idx]) continue;
           const GEMHit& h = *hits[idx];
@@ -319,6 +326,13 @@ void TrackFinder_factory::Process(const JEvent& event) {
           if (std::fabs(r_ec - r_h) < 1e-3) continue;
           const double zv = h.z - r_h * (ec->z - h.z) / (r_ec - r_h);
           if (std::fabs(zv - ztgt) > 80.0) continue;
+          ranked.emplace_back(std::hypot(h.x - xl, h.y - yl), idx);
+        }
+        std::sort(ranked.begin(), ranked.end());
+        if (static_cast<int>(ranked.size()) > m_max_seeds()) ranked.resize(m_max_seeds());
+        for (const auto& rk : ranked) {
+          const int idx = rk.second;
+          const GEMHit& h = *hits[idx];
           for (int sign : {+1, -1}) {
             TrackParams seed;
             if (!m_fitter->seedFromTwoHits(toFitHit(h, idx), ecf, m_b_eff(), seed)) continue;

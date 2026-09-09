@@ -8,7 +8,7 @@ NEVENTS=${2:-20000}
 NTHREADS=${3:-4}
 LUMIS=${LUMIS:-"1.2e37 1e38 1e39"}
 READOUTS=${READOUTS:-"strip pixel"}
-EXTRA=${EXTRA:-""}
+EXTRA=${EXTRA:-"-Pjana:timeout=600 -Pjana:warmup_timeout=600"}
 mkdir -p "$OUTDIR"
 for ro in $READOUTS; do
   for L in $LUMIS; do
