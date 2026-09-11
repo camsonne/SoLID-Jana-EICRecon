@@ -118,9 +118,21 @@ real, about a factor 1.6 for 40 cm versus 15 cm at the same luminosity. Note als
 | 10³⁹ | strip | 12 | 2.7 | 0.005 |
 | 10³⁹ | 1 mm² pixel | 0.030 | 0.0066 | 0.99 |
 
-With the analytic profile the strip readout at 10³⁸ moves from "dead" (9% hit survival) to "degraded"
-(58%), while at 10³⁹ it remains unusable and pixels remain comfortable. The scan in
-`results_analytic/` reruns the full chain with this table.
+Per plane and per hit, the analytic profile makes the strip readout at 10³⁸ look "degraded" (58%
+survival at the worst point) rather than "dead" (9%). End to end the improvement is much smaller,
+because the survival compounds over the five planes a forward track crosses and over the three
+leptons, and because the u/v ghost density, which scales as the square of the hit density times the
+module area, still floods the pattern recognition. The full chain rerun with this table
+(`results_analytic/`) gives for the strip readout:
+
+| L | events | with ≥4 GEM hits on e′, μ⁺, μ⁻ | fully reconstructed | placeholder table |
+|---|---|---|---|---|
+| 1.2×10³⁷ | 10 000 | 978 | 991 (98% of accepted) | 934 (92%) |
+| 10³⁸ | 2 000 | 45 | 19 | 12 |
+| 10³⁹ | 2 000 | 0 | 0 | 0 |
+
+So the conclusion for long strips does not change: usable at the J/ψ luminosity, marginal to unusable
+at 10³⁸, unusable at 10³⁹. Pixels remain comfortable throughout (see `results_analytic/RESULTS.md`).
 
 ## What is not included, and how to get it
 
