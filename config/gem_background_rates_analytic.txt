@@ -1,0 +1,11 @@
+# Analytic direct-source estimate of the GEM background (scripts/estimate_background_rates.py)
+# L_ref = 1.2e37 cm^-2 s^-1, 15.0 cm LH2, 3.0 uA, kmin = 0.1 MeV, flat albedo 0.0 kHz/mm^2
+# Direct sources only (Moller-brems photons, Compton of beam brems, hadrons); the beamline
+# albedo term requires a Geant4 beam-on-target simulation and is NOT included.
+# plane  rho0_kHz_per_mm2  alpha
+1  0.82260  1.292
+2  0.61376  1.095
+3  0.48688  0.985
+4  0.34912  0.851
+5  0.21824  0.598
+6  0.15458  0.587
