@@ -20,7 +20,8 @@ The results of the luminosity scan are in [`results/RESULTS.md`](results/RESULTS
 | `src/analysis/` | `DDVCSAnalysis_processor`: per-event CSV and JSON summary (acceptance, efficiency, resolutions). |
 | `src/io/SoLIDEDM4hep_source` | Reader for ddsim output (EDM4hep), digitises `GEMTrackerHits`, clusters the calorimeter hits, flags muon-detector hits. Built with `-DUSE_EDM4HEP=ON`. |
 | `scripts/run_ddvcs_lumi_scan.sh`, `scripts/plot_ddvcs_results.py` | Luminosity scan driver and plots/tables. |
-| `config/gem_background_rates.txt` | Background-rate parametrisation (override file). |
+| `config/gem_background_rates*.txt` | Background-rate tables for `gem:background_file`: the placeholder and the analytic estimate. |
+| `scripts/estimate_background_rates.py`, `docs/background_estimate.md` | First-principles estimate of the direct GEM background from cross sections. |
 
 ## Building
 
@@ -132,6 +133,11 @@ the saturated strip configurations):
   10³⁹ cm⁻² s⁻¹. At the highest SoLID DDVCS luminosities this points to finer segmentation
   (shorter strips or pixels) rather than the SIDIS-style long strips.
 
-These numbers depend on the background-rate parametrisation in `BackgroundModel` (order-of-magnitude
-estimate, see the source comment and `config/gem_background_rates.txt`); rerun the scan with rates
-from a dedicated `solid_gemc` background study to refine them.
+These numbers use the placeholder background-rate table compiled into `BackgroundModel`. A
+first-principles estimate of the direct background (Møller, bremsstrahlung, Compton, hadronic
+photoproduction, with the solenoid confinement of the Møller electrons) is in
+[`docs/background_estimate.md`](docs/background_estimate.md), produced by
+`scripts/estimate_background_rates.py`. It agrees with the placeholder totals to ±30% but has a much
+flatter radial profile; `config/gem_background_rates_analytic.txt` carries that profile and the scan
+with it is in [`results_analytic/RESULTS.md`](results_analytic/RESULTS.md). Neither table contains the
+beamline/collimator albedo, which requires a Geant4 beam-on-target simulation.
