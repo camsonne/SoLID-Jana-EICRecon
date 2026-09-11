@@ -146,6 +146,35 @@ a significant part of the total. It should be obtained from a Geant4 beam-on-tar
 beam pipe and shielding) and added to this table; the script accepts `--flat-albedo-kHz-mm2` as a
 crude way to add a uniform term meanwhile.
 
+### Low-energy photons: the estimate's weakest point
+
+The default photon cutoff is k_min = 100 keV, and the photon sources are treated as "generated at the
+target, then a single interaction in the GEM". Both choices matter, because bremsstrahlung and Compton
+spectra are ∝ 1/k, so every decade of photon energy carries a comparable number of photons, and the GEM
+response to soft photons is *larger*, not smaller: a 10–30 keV photon is absorbed photoelectrically in
+the 5 µm Cu electrodes with high probability, and the photoelectron (range 1–3 µm in Cu) often escapes
+into the gas and deposits its full energy, several times a MIP signal. Lowering the cutoff in the
+script shows the sensitivity (plane 2, L = 1.2×10³⁷):
+
+| k_min | Compton term at R_in [kHz/mm²] | plane-2 total at R_in | plane-2 integrated |
+|---|---|---|---|
+| 100 keV (default) | 0.19 | 0.80 | 1.6 GHz |
+| 30 keV | 0.54 | 1.20 | 3.0 GHz |
+| 10 keV | 1.30 | 2.00 | 5.8 GHz |
+
+The 10 keV row overstates the effect because the script has no attenuation between the target and the
+GEM gas: the 0.18 mm Al cell wall alone is about one mean free path at 10 keV, the 50 µm Al GEM entrance
+window another 0.3, and a few metres of air about 0.4, so photons below ~15–20 keV mostly never reach
+the gas, while 30–100 keV photons largely do. What the script also lacks is the *degradation cascade*:
+MeV photons that Compton-scatter repeatedly in the target, the cell, the beam pipe and the detector
+frames end up as tens-of-keV photons arriving from all directions, plus K-shell fluorescence from Cu
+(8 keV), Fe (6.4 keV, yoke) and Pb (75 keV, shielding). In SoLID's own Geant4 background studies this
+soft-photon component, not the direct MeV photons, dominates the GEM hit rate. **Treat the soft-photon
+contribution as a factor 2–3 upward uncertainty on the photon terms**, and as the main reason the
+direct-source floor here is a floor. It is also the part of the problem where an analytic estimate is
+least trustworthy and a Geant4 run with full low-energy EM physics (Livermore or Penelope, production
+cuts at a few keV) is required.
+
 Other approximations to keep in mind: the GEM integration window is taken as 100 ns (an APV25-based
 readout with a 3 mm drift gap is realistically 100–200 ns, so occupancies could be up to 2× higher);
 the field is the analytic coil model without the iron yoke (B at the target could differ by ~30%,
