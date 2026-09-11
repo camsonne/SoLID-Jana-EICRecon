@@ -6,4 +6,4 @@ install/
 *.root
 __pycache__/
 *.log
-results/*_events.csv
+results*/*_events.csv
