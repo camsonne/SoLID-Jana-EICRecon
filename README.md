@@ -139,5 +139,9 @@ photoproduction, with the solenoid confinement of the Møller electrons) is in
 [`docs/background_estimate.md`](docs/background_estimate.md), produced by
 `scripts/estimate_background_rates.py`. It agrees with the placeholder totals to ±30% but has a much
 flatter radial profile; `config/gem_background_rates_analytic.txt` carries that profile and the scan
-with it is in [`results_analytic/RESULTS.md`](results_analytic/RESULTS.md). Neither table contains the
-beamline/collimator albedo, which requires a Geant4 beam-on-target simulation.
+with it is in [`results_analytic/RESULTS.md`](results_analytic/RESULTS.md), with a side-by-side table in
+[`results_analytic/COMPARISON.md`](results_analytic/COMPARISON.md). The two tables give the same
+physics conclusions: pixel efficiency and resolution agree within statistics at every luminosity
+(0.72 to 0.82, 56 to 60 MeV²), and long strips go from usable at 1.2×10³⁷ to 6% efficiency at 10³⁸
+and zero at 10³⁹. Neither table contains the beamline/collimator albedo, which requires a Geant4
+beam-on-target simulation.
