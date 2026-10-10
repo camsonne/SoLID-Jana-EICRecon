@@ -13,7 +13,8 @@ The results of the luminosity scan are in [`results/RESULTS.md`](results/RESULTS
 |---|---|
 | `geometry/solid_ddvcs.xml`, `geometry/compact/` | DD4hep compact description of the DDVCS configuration: LH2 target, DDVCS GEM tracker (6 planes, planes 1–4 extended to R = 135 cm), LGC/HGC, LAEC/FAEC, SPD, MRPC, DDVCS muon detector (iron + scintillator). Detector plugins (`SoLID_*`) come from [JeffersonLab/solid_dd4hep](https://github.com/JeffersonLab/solid_dd4hep); positions follow `solid_gemc` (`gem_moved/solid_SIDIS_DDVCS_gem`, `prototype/muon_pro`). |
 | `scripts/run_ddsim_ddvcs.py` | DDG4 steering for the full Geant4 simulation (HepMC3 in, EDM4hep/podio out). |
-| `src/generator/` | DDVCS kinematics generator (`solid_ddvcs_gen`, HepMC3 ASCII output) — phase-space with importance sampling in the SoLID DDVCS region; weight 1, no amplitude. |
+| `src/generator/` | DDVCS kinematics generator (`solid_ddvcs_gen`, HepMC3 ASCII output) — phase-space with importance sampling in the SoLID DDVCS region; weight 1, no amplitude. `HepMC3Reader` reads physics events from [EpIC](https://github.com/pawelsznajder/epic) (DDVCS + BH cross section), `solid_hepmc_to_solid` converts them for ddsim, and `DDVCSKinematicsCalc.h` computes Q², x_B, Q′², t, the Trento φ and the lepton-pair angles θ_ℓ, φ_ℓ with EpIC's conventions, for truth and reconstruction alike. |
+| `config/epic/` | EpIC scenario for SoLID DDVCS (11 GeV e⁻ on LH2, μ⁺μ⁻ pair). |
 | `src/services/` | `SoLIDGeometry_service` (DDVCS geometry parameters) and `SoLIDField_service` (CLEO-II solenoid: Biot–Savart model of the coil packs from `solid_gemc/field/CLEOv9.am`, or the `solenoid_CLEOv9.dat` map when available). |
 | `src/fastsim/` | `SoLIDFastSim_source`: generator + RK4 transport in the solenoid field, multiple scattering (target, air, GEM planes), GEM hit smearing/efficiency, calorimeter clusters, muon-detector acceptance and a **luminosity-scaled background model** (`BackgroundModel`: rate density per plane vs radius, GEM time window, strip vs pixel readout, cluster-overlap losses, u/v ghost hits). |
 | `src/reco/` | `TrackPropagator` (RK4), `TrackFitter` (global χ² fit of (q/p, θ, φ, z_v) with the SoLID beam-line vertex constraint and a full multiple-scattering covariance), `TrackFinder_factory` (calorimeter-seeded progressive track finding), `DDVCSReco_factory` (e', μ⁺, μ⁻ selection and missing mass). |
@@ -69,6 +70,46 @@ Useful parameters (all have `-Pname=value` form; `jana -Pplugins=solid_ddvcs -Pj
 | `solid:muon_pmin` | 2.0 | Minimum momentum to traverse FAEC + 108 cm Fe to the last muon scintillator [GeV] |
 | `ddvcs:Q2_min/max`, `ddvcs:Qp2_min/max`, `ddvcs:xB_min/max`, `ddvcs:tabs_max` | 1–6, 2–9, 0.10–0.55, 1.5 | Generator ranges |
 | `fastsim:hepmc_out` | — | Also write the generated events as HepMC3 |
+| `fastsim:hepmc_in` | — | Read the events from a HepMC3 ASCII file (EpIC) instead of the internal generator |
+| `fastsim:hepmc_vertex` | target | `target`: vertex uniform along the LH2 cell (EpIC writes none); `file`: use the file's vertex |
+
+## Physics events from EpIC
+
+[EpIC](https://github.com/pawelsznajder/epic) (PARTONS-based; `DDVCSGeneratorService`, model
+`DDVCSProcessDMSW22`) generates unweighted DDVCS + Bethe–Heitler events with beam helicity, and is the
+event generator for the physics analysis. The internal generator remains for pure acceptance and
+resolution studies.
+
+```bash
+# 1. generate (EpIC installation or the partons/epic Docker image); one file per beam helicity
+epic --scenario=config/epic/epic_scenario_SoLID_DDVCS.xml --seed=1        # -> epic_SoLID_DDVCS.hepmc
+
+# 2a. fast simulation + reconstruction on the EpIC events
+jana -Pplugins=solid_ddvcs -Pfastsim:hepmc_in=epic_SoLID_DDVCS.hepmc -Psolid:luminosity=1e38 -Pgem:readout=pixel \
+     -Panalysis:output=epic_L1e38_pixel_events.csv -Panalysis:summary=epic_L1e38_pixel_summary.json
+
+# 2b. or convert for the Geant4 path (beam along +z, vertex in the target) and run ddsim on it
+build/src/solid_hepmc_to_solid -i epic_SoLID_DDVCS.hepmc -o ddvcs_solid.hepmc
+```
+
+What the reader does with EpIC files:
+
+* **Frame.** EpIC puts the lepton beam along −z (collider convention). Such events are rotated by π
+  around y, so the beam points along +z as in SoLID; kinematics and angles are unchanged.
+* **Fixed target.** Use `hadron_energy = Mp` (as in the provided scenario). The EpIC example's
+  `1.00001*Mp` corresponds to an 11.05 GeV fixed-target beam and leaves the proton moving at 4 MeV/c.
+  The source warns when the target is not at rest or the beam energy differs from `solid:beam_energy`.
+* **Event record.** e, p, e′, p′, γ*, ℓ⁻, ℓ⁺ are identified from the vertex structure (status 4 beams,
+  status 1 final state, ℓ pair produced by the outgoing γ*). Additional final-state particles, such as
+  photons from EpIC radiative corrections, are kept. The pair must be μ⁺μ⁻ (`decay_type = mu-`).
+* **Vertex.** EpIC writes none, so the vertex is placed uniformly along the 15 cm target.
+* **Cross section.** EpIC events are unweighted. The integrated cross section is written after the
+  last event and logged at the end of the run; the event weight goes to `GenKinematics::weight`, the
+  `weight` CSV column and `weight_sum` in the JSON summary.
+* **Angles.** `phi` (Trento, target rest frame), `costhl` and `phil` (ℓ⁻ relative to the recoil
+  proton in the ℓℓ rest frame) in the analysis CSV are exactly EpIC's `phi`, `cos(thetaL)` and
+  `phiL`. `tests/test_hepmc_reader.cc` checks this to 1e-12 on events built with EpIC's own
+  construction (`tests/make_epic_like_hepmc.py`). EpIC itself is not run in the tests.
 
 ## Full Geant4 simulation path
 
@@ -113,7 +154,8 @@ expect to iterate on them the first time they are loaded.
   Cherenkov, calorimeter and muon-detector responses are not simulated. Background in the
   calorimeters is not simulated.
 * **Not included**: bremsstrahlung/energy loss of the leptons in the target and detectors, the
-  physical DDVCS + Bethe–Heitler cross section (all events have weight 1), and pile-up in the
+  physical DDVCS + Bethe–Heitler cross section in the internal generator (all events have weight 1;
+  use EpIC events for it), and pile-up in the
   calorimeters.
 
 ## Results

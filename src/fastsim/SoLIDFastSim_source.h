@@ -1,4 +1,5 @@
-// Fast simulation event source: DDVCS generator + charged-particle transport through the SoLID
+// Fast simulation event source: DDVCS generator (internal phase space, or events read from a
+// HepMC3 ASCII file written by EpIC or another generator) + charged-particle transport through the SoLID
 // DDVCS geometry in the solenoid field (RK4), multiple scattering in the target, air and GEM
 // planes, GEM hit smearing/efficiency, and luminosity-scaled background/ghost hits.
 //
@@ -10,6 +11,7 @@
 #include <random>
 #include "fastsim/BackgroundModel.h"
 #include "generator/DDVCSGenerator.h"
+#include "generator/HepMC3Reader.h"
 #include "generator/HepMC3Writer.h"
 #include "reco/TrackPropagator.h"
 #include "services/SoLIDField_service.h"
@@ -48,6 +50,10 @@ private:
   Parameter<double> m_ec_eres{this, "ec:energy_resolution", 0.05, "Calorimeter sampling term sigma_E/E = a/sqrt(E)"};
   Parameter<double> m_muon_pmin{this, "solid:muon_pmin", 2.0, "Minimum momentum for a muon to reach the last FA muon scintillator [GeV]"};
   Parameter<std::string> m_hepmc_out{this, "fastsim:hepmc_out", "", "If set, also write the generated events as HepMC3 ASCII"};
+  Parameter<std::string> m_hepmc_in{this, "fastsim:hepmc_in", "",
+      "Read the events from this HepMC3 ASCII file (e.g. EpIC DDVCS output) instead of the internal generator"};
+  Parameter<std::string> m_hepmc_vertex{this, "fastsim:hepmc_vertex", "target",
+      "Vertex for HepMC3 input: target (uniform along the target, default; EpIC writes no vertex) | file"};
   // generator
   Parameter<double> m_Q2_min{this, "ddvcs:Q2_min", 1.0, "GeV^2"};
   Parameter<double> m_Q2_max{this, "ddvcs:Q2_max", 6.0, "GeV^2"};
@@ -58,7 +64,10 @@ private:
   Parameter<double> m_t_slope{this, "ddvcs:t_slope", 1.5, "GeV^-2"};
   Parameter<double> m_tabs_max{this, "ddvcs:tabs_max", 1.5, "GeV^2"};
 
+  bool nextEvent(std::vector<MCParticle>& parts);
+
   std::unique_ptr<DDVCSGenerator> m_gen;
+  std::unique_ptr<HepMC3Reader> m_reader;
   std::unique_ptr<BackgroundModel> m_bkg;
   std::unique_ptr<TrackPropagator> m_prop;
   std::unique_ptr<HepMC3Writer> m_hepmc;

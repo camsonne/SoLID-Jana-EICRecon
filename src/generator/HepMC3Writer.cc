@@ -16,7 +16,7 @@ HepMC3Writer::~HepMC3Writer() {
 }
 
 void HepMC3Writer::write(int event_number, const std::vector<MCParticle>& p, double weight) {
-  // vertices: -1 primary (in: 1,2 ; out: 3,4,5), -2 gamma* decay (in: 5 ; out: 6,7)
+  // vertices: -1 primary (in: 1,2 ; out: 3,4,5 and any particle beyond the 7th), -2 gamma* decay (in: 5 ; out: 6,7)
   m_out << "E " << event_number << " 2 " << p.size() << "\n";
   m_out << "U GEV MM\n";
   m_out << "W " << weight << "\n";
@@ -34,6 +34,7 @@ void HepMC3Writer::write(int event_number, const std::vector<MCParticle>& p, dou
   m_out << "V -2 0 [5]\n";
   P(6, -2, p[5]);
   P(7, -2, p[6]);
+  for (size_t i = 7; i < p.size(); ++i) P(static_cast<int>(i) + 1, -1, p[i]);  // e.g. radiated photons
 }
 
 }  // namespace solid

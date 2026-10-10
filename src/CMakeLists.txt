@@ -4,6 +4,7 @@ set(SOLID_SOURCES
   services/SoLIDField_service.cc
   generator/DDVCSGenerator.cc
   generator/HepMC3Writer.cc
+  generator/HepMC3Reader.cc
   fastsim/SoLIDFastSim_source.cc
   fastsim/BackgroundModel.cc
   reco/TrackPropagator.cc
@@ -35,7 +36,11 @@ target_link_libraries(solid_ddvcs PUBLIC solid_recon)
 add_executable(solid_ddvcs_gen generator/ddvcs_gen_main.cc)
 target_link_libraries(solid_ddvcs_gen PUBLIC solid_recon)
 
-install(TARGETS solid_recon solid_ddvcs_gen
+# Converter for external generators (EpIC HepMC3 -> SoLID frame and target vertex, for ddsim / DDG4)
+add_executable(solid_hepmc_to_solid generator/hepmc_to_solid_main.cc)
+target_link_libraries(solid_hepmc_to_solid PUBLIC solid_recon)
+
+install(TARGETS solid_recon solid_ddvcs_gen solid_hepmc_to_solid
         LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
 install(TARGETS solid_ddvcs LIBRARY DESTINATION lib/SoLID/plugins)
 install(DIRECTORY ./ DESTINATION include/SoLID FILES_MATCHING PATTERN "*.h")
