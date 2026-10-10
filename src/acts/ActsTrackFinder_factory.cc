@@ -129,6 +129,8 @@ struct ActsTrackingImpl {
 ActsTrackFinder_factory::ActsTrackFinder_factory() {
   SetTypeName(NAME_OF_THIS);
   m_hits_in.SetDatabundleName("GEMHits");
+  m_ec_in.SetDatabundleName("ECClusters");
+  m_ec_in.SetOptional(true);
   m_tracks_out.SetShortName("Tracks");
 }
 
@@ -506,10 +508,29 @@ void ActsTrackFinder_factory::Process(const JEvent& event) {
     t->nhits = static_cast<int>(t->hit_indices.size());
     matchTrackToTruth(*t, hits);
     setAcceptanceFlags(*t, geo, *m_prop, m_muon_pmin());
+    if (m_ec_match() > 0 && !matchesCluster(*t)) { delete t; continue; }
     out.push_back(t);
   }
   m_stats.tracks += static_cast<long>(out.size());
   m_tracks_out() = out;
+}
+
+bool ActsTrackFinder_factory::matchesCluster(const Track& trk) {
+  const auto& clusters = m_ec_in();
+  const auto& geo = m_geo();
+  for (int calo = 0; calo < 2; ++calo) {
+    const auto& ec = calo == 0 ? geo.faec() : geo.laec();
+    TrackState s;
+    s.pos = {0, 0, trk.params.zv};
+    s.mom = trk.params.momentum();
+    s.charge = trk.params.charge();
+    if (!m_prop->propagateToZ(s, ec.z)) continue;
+    for (const auto* c : clusters) {
+      if (c->calo != calo) continue;
+      if (std::hypot(c->x - s.pos.x, c->y - s.pos.y) < m_ec_match()) return true;
+    }
+  }
+  return false;
 }
 
 void ActsTrackFinder_factory::Finish() {

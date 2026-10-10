@@ -16,6 +16,7 @@
 //      multiple scattering in the LH2 target and Al cell added to the angular covariance; then
 //      the same Track object as the native tracker (q/p, theta, phi, z_v and covariance), truth
 //      matching and the calorimeter / muon-detector extrapolation flags used for PID.
+//   7. Calorimeter match (acts:ec_match_cm): the track must point to a FAEC or LAEC cluster.
 #pragma once
 
 #include <JANA/JFactory.h>
@@ -38,12 +39,18 @@ public:
   void Process(const JEvent& event) override;
   void Finish() override;
 
+private:
+  bool matchesCluster(const Track& trk);
+
+public:
+
   struct Stats {
     long events = 0, hits = 0, seeds = 0, ckf_tracks = 0, tracks = 0, failed_seeds = 0;
   };
 
 private:
   Input<GEMHit> m_hits_in{this};
+  Input<ECCluster> m_ec_in{this};
   Output<Track> m_tracks_out{this};
 
   Service<SoLIDGeometry_service> m_geo{this};
@@ -76,6 +83,10 @@ private:
       "Beam-line constraint on the transverse vertex position [mm] (<= 0 disables it)"};
   Parameter<bool> m_target_ms{this, "acts:target_scattering", true,
       "Add the multiple scattering in the LH2 target and Al cell to the vertex angular covariance"};
+  Parameter<double> m_ec_match{this, "acts:ec_match_cm", 5.0,
+      "Keep only tracks pointing to a FAEC/LAEC cluster within this distance [cm] (<= 0 disables). "
+      "The native tracker gets the same effect from its calorimeter seeding; without it, combinations "
+      "of background hits form fake tracks at high occupancy"};
   Parameter<std::string> m_log_level{this, "acts:log_level", "WARNING", "ACTS log level: VERBOSE DEBUG INFO WARNING ERROR"};
   Parameter<double> m_muon_pmin{this, "solid:muon_pmin", 2.0,
       "Minimum momentum for a muon to reach the last FA muon scintillator [GeV]"};
