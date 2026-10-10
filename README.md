@@ -153,7 +153,12 @@ expect to iterate on them the first time they are loaded.
 * **Field**: Biot–Savart field of the CLEO-II coil packs (r = 152.5/154.1 cm, z = ±173.8 cm) scaled
   to 1.5 T at the centre. The iron yoke is not modelled, so the fringe field at the target differs
   from the real map; use `field:mode=map field:map=solenoid_CLEOv9.dat` when the map is available.
-* **Tracking**: hits are 2D points with 70 µm resolution; the fit propagates with RK4 in the field
+* **Tracking (ACTS, default with `-DUSE_ACTS=ON`)**: ACTS triplet seeding, a seed pre-fit,
+  Combinatorial Kalman Filter, greedy ambiguity resolution, the beam-line constraint and target
+  multiple scattering at the vertex, and a calorimeter match. Its resolution equals the native
+  tracker's; efficiency is equal or better, and it runs 3–7× faster. Details and the
+  side-by-side luminosity scan are in [`docs/acts_tracking.md`](docs/acts_tracking.md).
+* **Tracking (native, `tracking:engine=native`)**: hits are 2D points with 70 µm resolution; the fit propagates with RK4 in the field
   and uses a measurement covariance that includes the multiple scattering in the target (LH2 +
   Al wall), the air between planes and the GEM planes (0.7 % X₀ each), so χ²/ndf ≈ 1 and the
   parameter errors are realistic. Tracks are seeded from a calorimeter cluster + a GEM hit + the
