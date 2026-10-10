@@ -29,3 +29,10 @@ if(Python3_FOUND)
             -o ${CMAKE_BINARY_DIR}/epic_like_solid.hepmc)
   set_tests_properties(solid_hepmc_reader solid_epic_chain solid_hepmc_to_solid PROPERTIES FIXTURES_REQUIRED epic_file)
 endif()
+
+# Built-in tracker (the default engine when ACTS is not built)
+add_test(NAME solid_ddvcs_smoke_native
+  COMMAND ${CMAKE_COMMAND} -E env JANA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/src
+          jana -Pplugins=solid_ddvcs -Ptracking:engine=native -Pfastsim:nevents=300 -Pnthreads=2
+               -Panalysis:output=${CMAKE_BINARY_DIR}/smoke_native_events.csv
+               -Panalysis:summary=${CMAKE_BINARY_DIR}/smoke_native_summary.json)

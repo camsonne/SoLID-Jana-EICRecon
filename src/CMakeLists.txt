@@ -10,6 +10,7 @@ set(SOLID_SOURCES
   reco/TrackPropagator.cc
   reco/TrackFitter.cc
   reco/TrackFinder_factory.cc
+  reco/TrackUtils.cc
   reco/DDVCSReco_factory.cc
   analysis/DDVCSAnalysis_processor.cc
 )
@@ -25,6 +26,12 @@ if(USE_EDM4HEP)
   target_sources(solid_recon PRIVATE io/SoLIDEDM4hep_source.cc)
   target_link_libraries(solid_recon PUBLIC podio::podio podio::podioRootIO EDM4HEP::edm4hep)
   target_compile_definitions(solid_recon PUBLIC SOLID_HAVE_EDM4HEP=1)
+endif()
+
+if(USE_ACTS)
+  target_sources(solid_recon PRIVATE acts/SoLIDActs_service.cc acts/ActsTrackFinder_factory.cc)
+  target_link_libraries(solid_recon PUBLIC Acts::Core)
+  target_compile_definitions(solid_recon PUBLIC SOLID_HAVE_ACTS=1)
 endif()
 
 # JANA plugin: solid_ddvcs.so

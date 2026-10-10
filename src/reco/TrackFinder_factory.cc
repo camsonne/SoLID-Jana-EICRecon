@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include "reco/TrackUtils.h"
 
 namespace solid {
 
@@ -213,51 +214,14 @@ Track* TrackFinder_factory::makeTrack(const Candidate& cand, const std::vector<c
   t->ndf = cand.fit.ndf;
   t->nhits = static_cast<int>(cand.indices.size());
   t->hit_indices = cand.indices;
-  std::map<int, int> votes;
-  for (int idx : cand.indices) {
-    t->planes.push_back(hits[idx]->plane);
-    if (hits[idx]->mc_index >= 0) votes[hits[idx]->mc_index]++;
-  }
-  int best = -1, nbest = 0;
-  for (auto& kv : votes) if (kv.second > nbest) { nbest = kv.second; best = kv.first; }
-  if (nbest * 2 > t->nhits) { t->mc_index = best; t->n_bkg_hits = t->nhits - nbest; t->purity = double(nbest) / t->nhits; }
-  else { t->mc_index = -1; t->n_bkg_hits = t->nhits - nbest; t->purity = double(nbest) / t->nhits; }
+  for (int idx : cand.indices) t->planes.push_back(hits[idx]->plane);
+  matchTrackToTruth(*t, hits);
   setAcceptanceFlags(*t);
   return t;
 }
 
 void TrackFinder_factory::setAcceptanceFlags(Track& trk) {
-  const auto& geo = m_geo();
-  const auto& prop = m_fitter->propagator();
-  TrackState s; s.pos = {0, 0, trk.params.zv}; s.mom = trk.params.momentum(); s.charge = trk.params.charge();
-  // LAEC
-  TrackState t = s;
-  if (prop.propagateToZ(t, geo.laec().z)) {
-    const double r = t.pos.perp();
-    trk.reaches_laec = (r >= geo.laec().rin && r <= geo.laec().rout);
-    s = t;
-    if (prop.propagateToZ(t, geo.faec().z)) {
-      const double r2 = t.pos.perp();
-      trk.reaches_faec = (r2 >= geo.faec().rin && r2 <= geo.faec().rout);
-      if (trk.reaches_faec && trk.p() > m_muon_pmin()) {
-        bool ok = true;
-        for (const auto& sc : geo.muon().fa_scint) {
-          if (!prop.propagateToZ(t, sc.z)) { ok = false; break; }
-          const double r3 = t.pos.perp();
-          if (r3 < sc.rin || r3 > sc.rout) { ok = false; break; }
-        }
-        trk.reaches_fa_muon = ok;
-        trk.p_at_muon = trk.p() - 0.0114 * geo.muon().fa_iron_total - 0.4;  // ~11.4 MeV/cm Fe + FAEC
-      }
-    }
-  }
-  if (trk.reaches_laec && !trk.reaches_fa_muon) {
-    TrackState u = s;
-    const auto& mu = geo.muon();
-    if (prop.propagateToR(u, mu.la_radius, mu.la_zmax) && u.pos.z >= mu.la_zmin && u.pos.z <= mu.la_zmax &&
-        trk.p() > 0.5 * m_muon_pmin())
-      trk.reaches_la_muon = true;
-  }
+  solid::setAcceptanceFlags(trk, m_geo(), m_fitter->propagator(), m_muon_pmin());
 }
 
 void TrackFinder_factory::Process(const JEvent& event) {

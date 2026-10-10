@@ -17,7 +17,8 @@ The results of the luminosity scan are in [`results/RESULTS.md`](results/RESULTS
 | `config/epic/` | EpIC scenario for SoLID DDVCS (11 GeV e⁻ on LH2, μ⁺μ⁻ pair). |
 | `src/services/` | `SoLIDGeometry_service` (DDVCS geometry parameters) and `SoLIDField_service` (CLEO-II solenoid: Biot–Savart model of the coil packs from `solid_gemc/field/CLEOv9.am`, or the `solenoid_CLEOv9.dat` map when available). |
 | `src/fastsim/` | `SoLIDFastSim_source`: generator + RK4 transport in the solenoid field, multiple scattering (target, air, GEM planes), GEM hit smearing/efficiency, calorimeter clusters, muon-detector acceptance and a **luminosity-scaled background model** (`BackgroundModel`: rate density per plane vs radius, GEM time window, strip vs pixel readout, cluster-overlap losses, u/v ghost hits). |
-| `src/reco/` | `TrackPropagator` (RK4), `TrackFitter` (global χ² fit of (q/p, θ, φ, z_v) with the SoLID beam-line vertex constraint and a full multiple-scattering covariance), `TrackFinder_factory` (calorimeter-seeded progressive track finding), `DDVCSReco_factory` (e', μ⁺, μ⁻ selection and missing mass). |
+| `src/acts/` | ACTS tracking (`tracking:engine=acts`, default when built with `-DUSE_ACTS=ON`): `SoLIDActs_service` (ACTS tracking geometry of the GEM planes and the SoLID field as an ACTS field provider), `ActsTrackFinder_factory` (ACTS triplet seeding, seed pre-fit, Combinatorial Kalman Filter, greedy ambiguity resolution, beam-line constraint). |
+| `src/reco/` | Native tracker (`tracking:engine=native`): `TrackPropagator` (RK4), `TrackFitter` (global χ² fit of (q/p, θ, φ, z_v) with the SoLID beam-line vertex constraint and a full multiple-scattering covariance), `TrackFinder_factory` (calorimeter-seeded progressive track finding). `DDVCSReco_factory` (e', μ⁺, μ⁻ selection and missing mass) serves both engines. |
 | `src/analysis/` | `DDVCSAnalysis_processor`: per-event CSV and JSON summary (acceptance, efficiency, resolutions). |
 | `src/io/SoLIDEDM4hep_source` | Reader for ddsim output (EDM4hep), digitises `GEMTrackerHits`, clusters the calorimeter hits, flags muon-detector hits. Built with `-DUSE_EDM4HEP=ON`. |
 | `scripts/run_ddvcs_lumi_scan.sh`, `scripts/plot_ddvcs_results.py` | Luminosity scan driver and plots/tables. |
@@ -42,6 +43,21 @@ ctest --test-dir build
 ```
 
 Add `-DUSE_EDM4HEP=ON` (needs podio and EDM4hep ≥ 0.99) to build the ddsim reader.
+
+**ACTS tracking** (`-DUSE_ACTS=ON`): needs [ACTS](https://github.com/acts-project/acts) ≥ 46 (Core
+only; the code is developed against 46.8.1, the version in eic-shell) and switches the build to
+C++20. ACTS is then the default tracking engine; `-Ptracking:engine=native` selects the built-in
+tracker.
+
+```bash
+# inside eic-shell ACTS is already installed; otherwise (needs Eigen3 >= 3.4 and Boost >= 1.78)
+git clone --branch v46.8.1 --depth 1 https://github.com/acts-project/acts
+cmake -S acts -B acts/build -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=$PWD/acts-install \
+      -DACTS_BUILD_EXAMPLES=OFF -DACTS_BUILD_UNITTESTS=OFF -DACTS_BUILD_INTEGRATIONTESTS=OFF
+cmake --build acts/build -j4 && cmake --install acts/build
+
+cmake -S . -B build -DUSE_ACTS=ON -DCMAKE_PREFIX_PATH="$PWD/jana2-install;$PWD/acts-install"
+```
 
 ## Running the fast-simulation + reconstruction chain
 
