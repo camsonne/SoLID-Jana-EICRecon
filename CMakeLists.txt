@@ -22,6 +22,21 @@ if(USE_ACTS)
   find_package(Acts 46 REQUIRED COMPONENTS Core)
   message(STATUS "ACTS ${Acts_VERSION}")
 endif()
+option(USE_ONNX "Build the GNN track finding (tracking:engine=gnn); needs ONNX Runtime" OFF)
+if(USE_ONNX)
+  # eic-shell provides the onnxruntime CMake package (as used by EICrecon); otherwise point
+  # ONNXRUNTIME_ROOT at a directory with include/onnxruntime_cxx_api.h and lib/libonnxruntime.so
+  find_package(onnxruntime CONFIG QUIET)
+  if(NOT TARGET onnxruntime::onnxruntime)
+    find_path(ONNXRUNTIME_INCLUDE_DIR onnxruntime_cxx_api.h
+              HINTS ${ONNXRUNTIME_ROOT} $ENV{ONNXRUNTIME_ROOT} PATH_SUFFIXES include include/onnxruntime REQUIRED)
+    find_library(ONNXRUNTIME_LIBRARY onnxruntime HINTS ${ONNXRUNTIME_ROOT} $ENV{ONNXRUNTIME_ROOT} PATH_SUFFIXES lib lib64 REQUIRED)
+    add_library(onnxruntime::onnxruntime SHARED IMPORTED)
+    set_target_properties(onnxruntime::onnxruntime PROPERTIES IMPORTED_LOCATION ${ONNXRUNTIME_LIBRARY}
+                          INTERFACE_INCLUDE_DIRECTORIES ${ONNXRUNTIME_INCLUDE_DIR})
+  endif()
+  message(STATUS "ONNX Runtime: GNN tracking enabled")
+endif()
 if(USE_EDM4HEP)
   find_package(podio REQUIRED)
   find_package(EDM4HEP REQUIRED)

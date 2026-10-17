@@ -11,6 +11,8 @@ set(SOLID_SOURCES
   reco/TrackFitter.cc
   reco/TrackFinder_factory.cc
   reco/TrackUtils.cc
+  gnn/GNNGraph.cc
+  gnn/GNNGraphDump_processor.cc
   reco/DDVCSReco_factory.cc
   analysis/DDVCSAnalysis_processor.cc
 )
@@ -32,6 +34,13 @@ if(USE_ACTS)
   target_sources(solid_recon PRIVATE acts/SoLIDActs_service.cc acts/ActsTrackFinder_factory.cc)
   target_link_libraries(solid_recon PUBLIC Acts::Core)
   target_compile_definitions(solid_recon PUBLIC SOLID_HAVE_ACTS=1)
+endif()
+
+if(USE_ONNX)
+  target_sources(solid_recon PRIVATE gnn/GNNEdgeClassifier.cc gnn/GNNTrackFinder_factory.cc)
+  target_link_libraries(solid_recon PUBLIC onnxruntime::onnxruntime)
+  target_compile_definitions(solid_recon PUBLIC SOLID_HAVE_ONNX=1
+    SOLID_GNN_DEFAULT_MODEL="${PROJECT_SOURCE_DIR}/config/gnn/solid_gem_in.onnx")
 endif()
 
 # JANA plugin: solid_ddvcs.so
