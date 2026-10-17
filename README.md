@@ -18,6 +18,7 @@ The results of the luminosity scan are in [`results/RESULTS.md`](results/RESULTS
 | `src/services/` | `SoLIDGeometry_service` (DDVCS geometry parameters) and `SoLIDField_service` (CLEO-II solenoid: Biot–Savart model of the coil packs from `solid_gemc/field/CLEOv9.am`, or the `solenoid_CLEOv9.dat` map when available). |
 | `src/fastsim/` | `SoLIDFastSim_source`: generator + RK4 transport in the solenoid field, multiple scattering (target, air, GEM planes), GEM hit smearing/efficiency, calorimeter clusters, muon-detector acceptance and a **luminosity-scaled background model** (`BackgroundModel`: rate density per plane vs radius, GEM time window, strip vs pixel readout, cluster-overlap losses, u/v ghost hits). |
 | `src/acts/` | ACTS tracking (`tracking:engine=acts`, default when built with `-DUSE_ACTS=ON`): `SoLIDActs_service` (ACTS tracking geometry of the GEM planes and the SoLID field as an ACTS field provider), `ActsTrackFinder_factory` (ACTS triplet seeding, seed pre-fit, Combinatorial Kalman Filter, greedy ambiguity resolution, beam-line constraint). |
+| `src/gnn/`, `scripts/gnn/`, `config/gnn/` | GNN tracking (`tracking:engine=gnn`, `-DUSE_ONNX=ON`): hit-graph construction (`GNNGraph`), training-data export (`-Pgnn:dump=<prefix>`), Interaction-Network training and ONNX export (`train_gnn.py`), ONNX Runtime inference (`GNNEdgeClassifier`), track building and fit (`GNNTrackFinder_factory`), trained model `solid_gem_in.onnx`. |
 | `src/reco/` | Native tracker (`tracking:engine=native`): `TrackPropagator` (RK4), `TrackFitter` (global χ² fit of (q/p, θ, φ, z_v) with the SoLID beam-line vertex constraint and a full multiple-scattering covariance), `TrackFinder_factory` (calorimeter-seeded progressive track finding). `DDVCSReco_factory` (e', μ⁺, μ⁻ selection and missing mass) serves both engines. |
 | `src/analysis/` | `DDVCSAnalysis_processor`: per-event CSV and JSON summary (acceptance, efficiency, resolutions). |
 | `src/io/SoLIDEDM4hep_source` | Reader for ddsim output (EDM4hep), digitises `GEMTrackerHits`, clusters the calorimeter hits, flags muon-detector hits. Built with `-DUSE_EDM4HEP=ON`. |
@@ -58,6 +59,11 @@ cmake --build acts/build -j4 && cmake --install acts/build
 
 cmake -S . -B build -DUSE_ACTS=ON -DCMAKE_PREFIX_PATH="$PWD/jana2-install;$PWD/acts-install"
 ```
+
+**GNN tracking** (`-DUSE_ONNX=ON`): needs ONNX Runtime ≥ 1.17. The CMake package from eic-shell
+is used when available; otherwise set `-DONNXRUNTIME_ROOT=<dir>` to a directory with
+`include/onnxruntime_cxx_api.h` and `lib/libonnxruntime.so` (for example the official release
+tarball). Selected with `-Ptracking:engine=gnn`.
 
 ## Running the fast-simulation + reconstruction chain
 
@@ -158,6 +164,11 @@ expect to iterate on them the first time they are loaded.
   multiple scattering at the vertex, and a calorimeter match. Its resolution equals the native
   tracker's; efficiency is equal or better, and it runs 3–7× faster. Details and the
   side-by-side luminosity scan are in [`docs/acts_tracking.md`](docs/acts_tracking.md).
+* **Tracking (GNN, `tracking:engine=gnn`, needs `-DUSE_ONNX=ON`)**: an Interaction-Network edge
+  classifier on the GEM hit graph (trained in PyTorch, run through ONNX Runtime), walkthrough track
+  building, and the native fitter. It matches the other engines at low occupancy and keeps the
+  fewest fake tracks at 10³⁹. Training, model and the three-engine comparison are in
+  [`docs/gnn_tracking.md`](docs/gnn_tracking.md).
 * **Tracking (native, `tracking:engine=native`)**: hits are 2D points with 70 µm resolution; the fit propagates with RK4 in the field
   and uses a measurement covariance that includes the multiple scattering in the target (LH2 +
   Al wall), the air between planes and the GEM planes (0.7 % X₀ each), so χ²/ndf ≈ 1 and the

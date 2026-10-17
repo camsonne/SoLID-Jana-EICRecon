@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(SoLIDJanaEICRecon VERSION 0.1.0 LANGUAGES CXX)
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)   # <PACKAGE>_ROOT variables, e.g. ONNXRUNTIME_ROOT
+endif()
 
 option(USE_ACTS "Build the ACTS track finding (tracking:engine=acts); needs ACTS >= 46 and C++20" OFF)
 if(USE_ACTS)
