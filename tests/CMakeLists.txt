@@ -36,3 +36,16 @@ add_test(NAME solid_ddvcs_smoke_native
           jana -Pplugins=solid_ddvcs -Ptracking:engine=native -Pfastsim:nevents=300 -Pnthreads=2
                -Panalysis:output=${CMAKE_BINARY_DIR}/smoke_native_events.csv
                -Panalysis:summary=${CMAKE_BINARY_DIR}/smoke_native_summary.json)
+
+# GNN training-data export (always built)
+add_test(NAME solid_gnn_dump
+  COMMAND ${CMAKE_COMMAND} -E env JANA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/src
+          jana -Pplugins=solid_ddvcs -Pfastsim:nevents=100 -Pnthreads=1 -Pgnn:dump=${CMAKE_BINARY_DIR}/gnn_smoke)
+# GNN track finding with the committed model
+if(USE_ONNX)
+  add_test(NAME solid_ddvcs_smoke_gnn
+    COMMAND ${CMAKE_COMMAND} -E env JANA_PLUGIN_PATH=${CMAKE_BINARY_DIR}/src
+            jana -Pplugins=solid_ddvcs -Ptracking:engine=gnn -Pfastsim:nevents=300 -Pnthreads=2
+                 -Panalysis:output=${CMAKE_BINARY_DIR}/smoke_gnn_events.csv
+                 -Panalysis:summary=${CMAKE_BINARY_DIR}/smoke_gnn_summary.json)
+endif()

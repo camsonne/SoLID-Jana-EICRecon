@@ -4,8 +4,12 @@
 //      (or skipping one plane) as edges, with geometric cuts.
 //   2. Edge classification by a graph neural network (Interaction Network trained with
 //      scripts/gnn/train_gnn.py on fast-simulation events) run through ONNX Runtime.
-//   3. Track candidates: edges above gnn:edge_threshold that are the best outgoing edge of their
-//      inner hit and the best incoming edge of their outer hit; these form disjoint chains of hits.
+//   3. Track candidates from the edges above gnn:edge_threshold (gnn:track_builder):
+//      walkthrough (default): all paths from hits without an incoming edge, ranked by length and
+//      summed edge score, fitted and accepted greedily without shared hits;
+//      mutual_best: chains of edges that are the best outgoing edge of their inner hit and the best
+//      incoming edge of their outer hit (faster, but a background hit next to a true hit that wins
+//      one comparison cuts the track).
 //   4. Fit of each chain with at least gnn:min_hits hits by the native global chi2 fitter (RK4 in the
 //      field, multiple-scattering covariance, beam-line constraint), with removal of the worst hit
 //      while chi2/ndf is too large.
@@ -49,7 +53,11 @@ private:
 
   GNNGraphParameters m_graph{this};
   Parameter<std::string> m_model{this, "gnn:model", SOLID_GNN_DEFAULT_MODEL, "ONNX model of the edge classifier"};
-  Parameter<double> m_threshold{this, "gnn:edge_threshold", 0.5, "Minimum edge score"};
+  Parameter<double> m_threshold{this, "gnn:edge_threshold", 0.02,
+      "Minimum edge score for the track building (low: the walkthrough and the fit reject wrong paths)"};
+  Parameter<std::string> m_builder{this, "gnn:track_builder", "walkthrough",
+      "Track building from the scored graph: walkthrough (all paths, fitted and accepted greedily) | mutual_best"};
+  Parameter<int> m_max_paths{this, "gnn:max_paths_per_start", 64, "Walkthrough: maximum paths followed from one hit"};
   Parameter<int> m_min_hits{this, "gnn:min_hits", 4, "Minimum number of GEM hits per track"};
   Parameter<double> m_chi2ndf_max{this, "gnn:chi2ndf_max", 10.0, "Maximum chi2/ndf of accepted tracks"};
   Parameter<double> m_b_eff{this, "gnn:b_eff_tesla", 1.0, "Effective uniform field for the analytic fit seed [T]"};

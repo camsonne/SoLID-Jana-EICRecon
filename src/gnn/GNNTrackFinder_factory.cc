@@ -92,35 +92,90 @@ void GNNTrackFinder_factory::Process(const JEvent& event) {
   if (g.numEdges() == 0) { m_tracks_out() = out; return; }
   const std::vector<float> score = m_classifier->score(g);
 
-  // mutual-best edges above threshold -> disjoint chains
   const size_t N = g.numNodes();
-  std::vector<int> best_out(N, -1), best_in(N, -1);
-  for (size_t e = 0; e < g.numEdges(); ++e) {
-    if (score[e] < m_threshold()) continue;
-    const auto a = g.src[e], b = g.dst[e];
-    if (best_out[a] < 0 || score[e] > score[best_out[a]]) best_out[a] = static_cast<int>(e);
-    if (best_in[b] < 0 || score[e] > score[best_in[b]]) best_in[b] = static_cast<int>(e);
+  std::vector<std::vector<int>> candidates;   // hit-index lists ordered by plane
+  if (m_builder() == "mutual_best") {
+    // edges that are the best outgoing edge of their inner hit and the best incoming edge of their
+    // outer hit form disjoint chains
+    std::vector<int> best_out(N, -1), best_in(N, -1);
+    for (size_t e = 0; e < g.numEdges(); ++e) {
+      if (score[e] < m_threshold()) continue;
+      const auto a = g.src[e], b = g.dst[e];
+      if (best_out[a] < 0 || score[e] > score[best_out[a]]) best_out[a] = static_cast<int>(e);
+      if (best_in[b] < 0 || score[e] > score[best_in[b]]) best_in[b] = static_cast<int>(e);
+    }
+    std::vector<int> next(N, -1);
+    std::vector<char> has_prev(N, 0);
+    for (size_t a = 0; a < N; ++a) {
+      const int e = best_out[a];
+      if (e < 0 || best_in[g.dst[e]] != e) continue;
+      next[a] = static_cast<int>(g.dst[e]);
+      has_prev[g.dst[e]] = 1;
+      ++m_kept_edges;
+    }
+    for (size_t a = 0; a < N; ++a) {
+      if (has_prev[a] || next[a] < 0) continue;
+      std::vector<int> chain;
+      for (int n = static_cast<int>(a); n >= 0; n = next[n]) chain.push_back(g.hit[n]);
+      if (static_cast<int>(chain.size()) >= m_min_hits()) candidates.push_back(chain);
+    }
+  } else {
+    // walkthrough: every path along edges above threshold, from hits without an incoming
+    // above-threshold edge; ranked by length and mean edge score, then fitted and accepted
+    // greedily without shared hits. Unlike mutual-best chains, a background hit that wins one
+    // comparison next to a true hit cannot cut the track.
+    std::vector<std::vector<std::pair<float, int>>> adj(N);   // (score, dst node)
+    std::vector<char> has_in(N, 0);
+    for (size_t e = 0; e < g.numEdges(); ++e) {
+      if (score[e] < m_threshold()) continue;
+      adj[g.src[e]].emplace_back(score[e], static_cast<int>(g.dst[e]));
+      has_in[g.dst[e]] = 1;
+      ++m_kept_edges;
+    }
+    for (auto& v : adj) std::sort(v.begin(), v.end(), [](const auto& x, const auto& y) { return x.first > y.first; });
+    struct Path { std::vector<int> nodes; double sum = 0; };
+    std::vector<Path> paths;
+    const int max_paths = m_max_paths();
+    for (size_t a = 0; a < N; ++a) {
+      if (has_in[a] || adj[a].empty()) continue;
+      int found = 0;
+      std::vector<Path> stack{{{static_cast<int>(a)}, 0.0}};
+      while (!stack.empty() && found < max_paths) {
+        Path p = std::move(stack.back());
+        stack.pop_back();
+        const auto& out_edges = adj[p.nodes.back()];
+        if (out_edges.empty()) {
+          if (static_cast<int>(p.nodes.size()) >= m_min_hits()) { paths.push_back(std::move(p)); ++found; }
+          continue;
+        }
+        for (auto it = out_edges.rbegin(); it != out_edges.rend(); ++it) {   // best edge explored first
+          Path q = p;
+          q.nodes.push_back(it->second);
+          q.sum += it->first;
+          stack.push_back(std::move(q));
+        }
+      }
+    }
+    std::sort(paths.begin(), paths.end(), [](const Path& x, const Path& y) {
+      if (x.nodes.size() != y.nodes.size()) return x.nodes.size() > y.nodes.size();
+      return x.sum > y.sum;
+    });
+    for (const auto& p : paths) {
+      std::vector<int> c;
+      for (int n : p.nodes) c.push_back(g.hit[n]);
+      candidates.push_back(std::move(c));
+    }
   }
-  std::vector<int> next(N, -1);
-  std::vector<char> has_prev(N, 0);
-  for (size_t a = 0; a < N; ++a) {
-    const int e = best_out[a];
-    if (e < 0) continue;
-    const auto b = g.dst[e];
-    if (best_in[b] != e) continue;
-    next[a] = static_cast<int>(b);
-    has_prev[b] = 1;
-    ++m_kept_edges;
-  }
-  for (size_t a = 0; a < N; ++a) {
-    if (has_prev[a] || next[a] < 0) continue;   // chain starts
-    std::vector<int> chain;
-    for (int n = static_cast<int>(a); n >= 0; n = next[n]) chain.push_back(g.hit[n]);
-    if (static_cast<int>(chain.size()) < m_min_hits()) continue;
+
+  std::vector<char> used(hits.size(), 0);
+  for (const auto& cand : candidates) {
+    std::vector<int> free;
+    for (int idx : cand) if (!used[idx]) free.push_back(idx);
+    if (static_cast<int>(free.size()) < m_min_hits()) continue;
     ++m_candidates;
     FitResult fit;
     std::vector<int> kept;
-    if (!fitCandidate(chain, hits, fit, kept)) continue;
+    if (!fitCandidate(free, hits, fit, kept)) continue;
     auto* t = new Track();
     t->params = fit.params;
     t->cov = fit.cov;
@@ -132,6 +187,7 @@ void GNNTrackFinder_factory::Process(const JEvent& event) {
     matchTrackToTruth(*t, hits);
     setAcceptanceFlags(*t, m_geo(), m_fitter->propagator(), m_muon_pmin());
     if (m_ec_match() > 0 && !matchesCluster(*t)) { delete t; continue; }
+    for (int idx : kept) used[idx] = 1;
     out.push_back(t);
   }
   m_tracks += static_cast<long>(out.size());
