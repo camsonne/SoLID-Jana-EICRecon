@@ -5,7 +5,9 @@ if(POLICY CMP0144)
 endif()
 
 option(USE_ACTS "Build the ACTS track finding (tracking:engine=acts); needs ACTS >= 46 and C++20" OFF)
-if(USE_ACTS)
+option(USE_EDM4HEP "Build the EDM4hep/podio event source for reading ddsim output" OFF)
+if(USE_ACTS OR USE_EDM4HEP)
+  # ACTS >= 46 and podio >= 1.0 need C++20
   set(CMAKE_CXX_STANDARD 20)
 else()
   set(CMAKE_CXX_STANDARD 17)
@@ -19,7 +21,6 @@ endif()
 # JANA2 (https://github.com/JeffersonLab/JANA2). Point JANA_ROOT or CMAKE_PREFIX_PATH at the install.
 find_package(JANA REQUIRED)
 
-option(USE_EDM4HEP "Build the EDM4hep/podio event source for reading ddsim output" OFF)
 if(USE_ACTS)
   # eic-shell ships ACTS 46.8.1; the code uses the Seeding2 API introduced in the 4x series
   find_package(Acts 46 REQUIRED COMPONENTS Core)

@@ -6,6 +6,7 @@
 // Registers the geometry and field services, the fast-simulation event source (unless an input
 // file is given on the command line), the tracking and DDVCS factories and the analysis processor.
 #include <JANA/JApplication.h>
+#include <JANA/JEventSourceGeneratorT.h>
 #include <JANA/JFactoryGenerator.h>
 #include "analysis/DDVCSAnalysis_processor.h"
 #include "gnn/GNNGraphDump_processor.h"

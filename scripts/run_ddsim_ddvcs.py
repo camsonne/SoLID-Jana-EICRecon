@@ -27,6 +27,8 @@ parser.add_argument("-s", "--n-skip", type=int, default=0)
 parser.add_argument("--seed", type=int, default=854321)
 parser.add_argument("--beam-sigma-mm", type=float, default=0.5, help="transverse beam spot sigma [mm]")
 parser.add_argument("--physics", default="QGSP_BERT")
+parser.add_argument("--optical", action="store_true",
+                    help="simulate Cherenkov optical photons in LGC/HGC (slow; the DDVCS analysis does not use them yet)")
 parser.add_argument("--vis", action="store_true")
 parser.add_argument("-v", "--verbose", type=int, default=0)
 args = parser.parse_args()
@@ -58,13 +60,8 @@ def run():
     rndm.Seed = args.seed
     rndm.initialize()
 
-    # --- output: podio / EDM4hep
-    podio = DDG4.EventAction(kernel, "Geant4Output2Podio/RootOutput", True)
-    podio.HandleMCTruth = True
-    podio.Control = True
-    podio.Output = args.output
-    podio.enableUI()
-    kernel.eventAction().adopt(podio)
+    # --- output: EDM4hep (podio ROOT file <output>.edm4hep.root)
+    geant4.setupEDM4hepOutput("EDM4hepOutput", args.output + ".edm4hep.root")
 
     # --- generator: HepMC3 file from solid_ddvcs_gen
     gen = DDG4.GeneratorAction(kernel, "Geant4GeneratorActionInit/GenerationInit")
@@ -113,19 +110,23 @@ def run():
     for calo in ("FAECPreShower", "FAECShower", "LAECPreShower", "LAECShower"):
         geant4.setupCalorimeter(calo)
     for cher in ("LightGasCherenkov", "HeavyGasCherenkov"):
-        seq, act = geant4.setupDetector(cher, "PhotoMultiplierSDAction")
-        act.adopt(f_optical_select)
+        if args.optical:
+            seq, act = geant4.setupDetector(cher, "Geant4OpticalTrackerAction")
+            act.adopt(f_optical_select)
+        else:
+            geant4.setupTracker(cher)
 
     # --- physics
     phys = geant4.setupPhysics(args.physics)
     geant4.addPhysics("Geant4PhysicsList/Myphysics")
-    ph = DDG4.PhysicsList(kernel, "Geant4OpticalPhotonPhysics/OpticalPhotonPhys")
-    phys.adopt(ph)
-    ph = DDG4.PhysicsList(kernel, "Geant4CerenkovPhysics/CerenkovPhys")
-    ph.MaxNumPhotonsPerStep = 10
-    ph.MaxBetaChangePerStep = 10.0
-    ph.TrackSecondariesFirst = True
-    phys.adopt(ph)
+    if args.optical:
+        ph = DDG4.PhysicsList(kernel, "Geant4OpticalPhotonPhysics/OpticalPhotonPhys")
+        phys.adopt(ph)
+        ph = DDG4.PhysicsList(kernel, "Geant4CerenkovPhysics/CerenkovPhys")
+        ph.MaxNumPhotonsPerStep = 10
+        ph.MaxBetaChangePerStep = 10.0
+        ph.TrackSecondariesFirst = True
+        phys.adopt(ph)
     rg = geant4.addPhysics("Geant4DefaultRangeCut/GlobalRangeCut")
     rg.RangeCut = 0.7 * mm
     if args.verbose > 1:
