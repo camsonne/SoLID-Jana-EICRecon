@@ -38,7 +38,7 @@
   <limits>
     <limitset name="world_limits"/>
     <limitset name="cal_limits">
-      <limit name="step_length_max" particles="*" value="5.0*mm"/>
+      <limit name="step_length_max" particles="*" value="5.0" unit="mm"/>
     </limitset>
   </limits>
 

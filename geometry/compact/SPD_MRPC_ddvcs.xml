@@ -22,11 +22,11 @@
   <readouts>
     <readout name="SPDHits">
       <segmentation type="CartesianGridXY" grid_size_x="5*cm" grid_size_y="5*cm"/>
-      <id>system:8,layer:4,x:32:-16,y:-16</id>
+      <id>system:8,barrel:2,layer:4,slice:4,x:32:-16,y:-16</id>
     </readout>
     <readout name="MRPCHits">
       <segmentation type="CartesianGridXY" grid_size_x="2.5*cm" grid_size_y="2.5*cm"/>
-      <id>system:8,layer:4,x:32:-16,y:-16</id>
+      <id>system:8,barrel:2,layer:4,slice:4,x:32:-16,y:-16</id>
     </readout>
   </readouts>
 </lccdd>

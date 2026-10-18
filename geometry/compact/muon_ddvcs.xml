@@ -11,22 +11,28 @@
   </define>
   <detectors>
     <!-- iron absorbers: two half slabs per layer, alternating split orientation -->
-    <detector id="60" name="MuonFAIron1a" type="DD4hep_BoxSegment" material="Iron" vis="MuonIronVis">
+    <detector id="60" name="MuonFAIron1a" type="DD4hep_BoxSegment" vis="MuonIronVis">
+      <material name="Iron"/>
       <box x="125*cm" y="267*cm" z="MuFA_iron_half"/><position x="160*cm" y="0" z="MuFA_z1"/>
     </detector>
-    <detector id="61" name="MuonFAIron1b" type="DD4hep_BoxSegment" material="Iron" vis="MuonIronVis">
+    <detector id="61" name="MuonFAIron1b" type="DD4hep_BoxSegment" vis="MuonIronVis">
+      <material name="Iron"/>
       <box x="125*cm" y="267*cm" z="MuFA_iron_half"/><position x="-160*cm" y="0" z="MuFA_z1"/>
     </detector>
-    <detector id="62" name="MuonFAIron2a" type="DD4hep_BoxSegment" material="Iron" vis="MuonIronVis">
+    <detector id="62" name="MuonFAIron2a" type="DD4hep_BoxSegment" vis="MuonIronVis">
+      <material name="Iron"/>
       <box x="267*cm" y="125*cm" z="MuFA_iron_half"/><position x="0" y="160*cm" z="MuFA_z2"/>
     </detector>
-    <detector id="63" name="MuonFAIron2b" type="DD4hep_BoxSegment" material="Iron" vis="MuonIronVis">
+    <detector id="63" name="MuonFAIron2b" type="DD4hep_BoxSegment" vis="MuonIronVis">
+      <material name="Iron"/>
       <box x="267*cm" y="125*cm" z="MuFA_iron_half"/><position x="0" y="-160*cm" z="MuFA_z2"/>
     </detector>
-    <detector id="64" name="MuonFAIron3a" type="DD4hep_BoxSegment" material="Iron" vis="MuonIronVis">
+    <detector id="64" name="MuonFAIron3a" type="DD4hep_BoxSegment" vis="MuonIronVis">
+      <material name="Iron"/>
       <box x="125*cm" y="267*cm" z="MuFA_iron_half"/><position x="160*cm" y="0" z="MuFA_z3"/>
     </detector>
-    <detector id="65" name="MuonFAIron3b" type="DD4hep_BoxSegment" material="Iron" vis="MuonIronVis">
+    <detector id="65" name="MuonFAIron3b" type="DD4hep_BoxSegment" vis="MuonIronVis">
+      <material name="Iron"/>
       <box x="125*cm" y="267*cm" z="MuFA_iron_half"/><position x="-160*cm" y="0" z="MuFA_z3"/>
     </detector>
     <!-- scintillator annuli, 5 cm thick, 23 cm behind each iron layer centre -->
@@ -42,22 +48,26 @@
       </layer>
     </detector>
     <!-- large-angle cylinder outside the endcap yoke, z = 209..620 cm -->
-    <detector id="67" name="MuonLAScint" type="DD4hep_CylinderTracker" readout="MuonHits" vis="MuonScintVis">
-      <layer id="4" inner_r="290*cm" outer_r="295*cm" z="411*cm" z0="414.5*cm">
-        <slice material="MuonScintillator" thickness="5*cm" sensitive="yes"/>
-      </layer>
+    <detector id="67" name="MuonLAScint" type="DD4hep_TubeSegment" readout="MuonHits" vis="MuonScintVis">
+      <material name="MuonScintillator"/>
+      <sensitive type="tracker"/>
+      <tubs rmin="290*cm" rmax="295*cm" zhalf="0.5*(411*cm)"/>
+      <position x="0" y="0" z="414.5*cm"/>
+      <rotation x="0" y="0" z="0"/>
     </detector>
     <!-- barrel outside the coil yoke, z = -266..182 cm -->
-    <detector id="68" name="MuonBarrelScint" type="DD4hep_CylinderTracker" readout="MuonHits" vis="MuonScintVis">
-      <layer id="5" inner_r="285*cm" outer_r="290*cm" z="448*cm" z0="-42*cm">
-        <slice material="MuonScintillator" thickness="5*cm" sensitive="yes"/>
-      </layer>
+    <detector id="68" name="MuonBarrelScint" type="DD4hep_TubeSegment" readout="MuonHits" vis="MuonScintVis">
+      <material name="MuonScintillator"/>
+      <sensitive type="tracker"/>
+      <tubs rmin="285*cm" rmax="290*cm" zhalf="0.5*(448*cm)"/>
+      <position x="0" y="0" z="-42*cm"/>
+      <rotation x="0" y="0" z="0"/>
     </detector>
   </detectors>
   <readouts>
     <readout name="MuonHits">
       <segmentation type="CartesianGridXY" grid_size_x="10*cm" grid_size_y="10*cm"/>
-      <id>system:8,layer:4,x:32:-16,y:-16</id>
+      <id>system:8,barrel:2,layer:4,slice:4,x:32:-16,y:-16</id>
     </readout>
   </readouts>
 </lccdd>
