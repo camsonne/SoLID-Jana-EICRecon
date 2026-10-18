@@ -144,9 +144,13 @@ jana -Pplugins=solid_ddvcs -Psolid:source=edm4hep -Psolid:luminosity=1e38 ddvcs_
 
 The same tracking, DDVCS reconstruction and analysis run on the Geant4 hits; the background
 model is applied on top of the simulated hits in the same way as in the fast simulation.
-The compact files have been written against the `solid_dd4hep` plugin interfaces but could not
-be executed in the environment used to develop this package (no DD4hep/Geant4 available), so
-expect to iterate on them the first time they are loaded.
+Use the CLEO field map in the reconstruction (`-Pfield:mode=map -Pfield:map=solenoid_CLEOv9.dat`),
+the same map Geant4 uses.
+
+The full simulation has now run end to end (geometry, Geant4, EDM4hep, all three tracking engines).
+The fixes it required and the comparison with the fast simulation on the same events are in
+[`docs/geant4_simulation.md`](docs/geant4_simulation.md); `scripts/geant4/setup_stack.sh` builds the
+stack outside eic-shell.
 
 ## Physics and detector model
 

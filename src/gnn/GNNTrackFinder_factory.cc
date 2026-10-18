@@ -66,18 +66,14 @@ bool GNNTrackFinder_factory::fitCandidate(const std::vector<int>& hit_indices, c
 }
 
 bool GNNTrackFinder_factory::matchesCluster(const Track& trk) {
-  const auto& geo = m_geo();
-  for (int calo = 0; calo < 2; ++calo) {
-    const auto& ec = calo == 0 ? geo.faec() : geo.laec();
+  // project the track to the depth of each cluster (cluster centroids are inside the shower)
+  for (const auto* c : m_ec_in()) {
     TrackState s;
     s.pos = {0, 0, trk.params.zv};
     s.mom = trk.params.momentum();
     s.charge = trk.params.charge();
-    if (!m_fitter->propagator().propagateToZ(s, ec.z)) continue;
-    for (const auto* c : m_ec_in()) {
-      if (c->calo != calo) continue;
-      if (std::hypot(c->x - s.pos.x, c->y - s.pos.y) < m_ec_match()) return true;
-    }
+    if (!m_fitter->propagator().propagateToZ(s, c->z)) continue;
+    if (std::hypot(c->x - s.pos.x, c->y - s.pos.y) < m_ec_match()) return true;
   }
   return false;
 }

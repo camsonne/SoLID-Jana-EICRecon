@@ -124,18 +124,18 @@ JEventSource::Result SoLIDEDM4hep_source::Emit(JEvent& event) {
       if (!collp) return;
     }
     const auto& coll = frame.get<edm4hep::SimCalorimeterHitCollection>(name);
-    struct Cl { double x = 0, y = 0, e = 0; std::map<int, double> mc; };
+    struct Cl { double x = 0, y = 0, z = 0, e = 0; std::map<int, double> mc; };
     std::vector<Cl> cls;
     for (const auto& h : coll) {
       const auto pos = h.getPosition();
-      const double x = pos.x * 0.1, y = pos.y * 0.1, e = h.getEnergy();
+      const double x = pos.x * 0.1, y = pos.y * 0.1, z = pos.z * 0.1, e = h.getEnergy();
       if (e <= 0) continue;
       Cl* best = nullptr;
       for (auto& c : cls) {
         if (std::hypot(c.x / c.e - x, c.y / c.e - y) < m_ec_cluster_radius()) { best = &c; break; }
       }
       if (!best) { cls.emplace_back(); best = &cls.back(); }
-      best->x += x * e; best->y += y * e; best->e += e;
+      best->x += x * e; best->y += y * e; best->z += z * e; best->e += e;
       for (unsigned i = 0; i < h.contributions_size(); ++i) {
         const auto contrib = h.getContributions(i);
         int mc = mcIndexOf(contrib.getParticle());
@@ -145,12 +145,14 @@ JEventSource::Result SoLIDEDM4hep_source::Emit(JEvent& event) {
       }
     }
     for (const auto& c : cls) {
-      if (c.e < 0.1) continue;  // 100 MeV threshold
+      if (c.e < m_ec_cluster_emin()) continue;
       ECCluster ec;
       ec.calo = calo;
       ec.x = c.x / c.e + m_ec_sigma() * G(m_rng);
       ec.y = c.y / c.e + m_ec_sigma() * G(m_rng);
-      ec.z = zface;
+      // energy-weighted centroid, including its depth: the tracks are projected to this z
+      // (projecting to the front face would shift inclined tracks by several cm)
+      ec.z = c.e > 0 ? c.z / c.e : zface;
       ec.sigma_xy = m_ec_sigma();
       ec.energy = c.e;
       int best = -1; double ebest = 0;
