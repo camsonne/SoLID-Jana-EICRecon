@@ -48,7 +48,7 @@
       </layer>
     </detector>
     <!-- large-angle cylinder outside the endcap yoke, z = 209..620 cm -->
-    <detector id="67" name="MuonLAScint" type="DD4hep_TubeSegment" readout="MuonHits" vis="MuonScintVis">
+    <detector id="67" name="MuonLAScint" type="DD4hep_TubeSegment" readout="MuonHits" vis="MuonScintVis" sensitive="yes">
       <material name="MuonScintillator"/>
       <sensitive type="tracker"/>
       <tubs rmin="290*cm" rmax="295*cm" zhalf="0.5*(411*cm)"/>
@@ -56,7 +56,7 @@
       <rotation x="0" y="0" z="0"/>
     </detector>
     <!-- barrel outside the coil yoke, z = -266..182 cm -->
-    <detector id="68" name="MuonBarrelScint" type="DD4hep_TubeSegment" readout="MuonHits" vis="MuonScintVis">
+    <detector id="68" name="MuonBarrelScint" type="DD4hep_TubeSegment" readout="MuonHits" vis="MuonScintVis" sensitive="yes">
       <material name="MuonScintillator"/>
       <sensitive type="tracker"/>
       <tubs rmin="285*cm" rmax="290*cm" zhalf="0.5*(448*cm)"/>
