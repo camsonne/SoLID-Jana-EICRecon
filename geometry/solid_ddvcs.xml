@@ -38,7 +38,7 @@
   <limits>
     <limitset name="world_limits"/>
     <limitset name="cal_limits">
-      <limit name="step_length_max" particles="*" value="5.0*mm"/>
+      <limit name="step_length_max" particles="*" value="5.0" unit="mm"/>
     </limitset>
   </limits>
 
@@ -70,6 +70,7 @@
     <include ref="${SOLID_DD4HEP}/compact/FAEC.xml"/>
     <include ref="${DETECTOR_PATH}/compact/SPD_MRPC_ddvcs.xml"/>
     <include ref="${DETECTOR_PATH}/compact/muon_ddvcs.xml"/>
+    <include ref="${DETECTOR_PATH}/compact/magnet_ddvcs.xml"/>
   </detectors>
 
   <readouts>

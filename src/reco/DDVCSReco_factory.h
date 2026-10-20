@@ -1,5 +1,8 @@
 // DDVCS event reconstruction: identify e', mu+, mu- among the fitted tracks and compute the
-// missing mass of the undetected recoil proton,  MM^2 = (k + P - k' - l+ - l-)^2.
+// missing mass of the undetected recoil proton,  MM^2 = (k + P - k' - l+ - l-)^2, together with
+// Q2, xB, Q'2, t, W, the Trento phi and the lepton-pair angles (generator/DDVCSKinematicsCalc.h).
+// Truth kinematics use the beam four-vectors of the MC record; the reconstruction uses the nominal
+// beam energy and a target at rest.
 //
 // Particle identification uses the detector-acceptance flags of the tracks combined with the
 // truth association (the fast simulation does not model the Cherenkov / calorimeter / muon

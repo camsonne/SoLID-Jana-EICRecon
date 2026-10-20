@@ -44,8 +44,13 @@ private:
   std::ofstream m_out;
   long m_n_events = 0, m_n_geom = 0, m_n_found_geom = 0, m_n_accepted = 0, m_n_found = 0, m_n_found_accepted = 0, m_n_all_matched = 0;
   long m_n_tracks = 0, m_n_tracks_with_bkg = 0, m_n_fake_tracks = 0;
+  // per lepton in geometrically accepted events with >= 4 GEM hits: [e, mu+, mu-]
+  long m_lep_total[3] = {0, 0, 0}, m_lep_tracked[3] = {0, 0, 0}, m_lep_pid_ok[3] = {0, 0, 0};
   Stats m_mm2, m_mm, m_mm2_clean, m_dpp_e, m_dpp_mu, m_dth_e, m_dth_mu, m_dph_mu, m_dQ2, m_dQp2, m_dt, m_chi2ndf, m_dzv;
+  Stats m_dphi, m_dcos_thl, m_dphi_l;
   double m_lumi = 0;
+  double m_weight_sum = 0, m_weight_sum_found = 0;
+  int m_gen_source = 0;
 };
 
 }  // namespace solid

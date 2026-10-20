@@ -184,8 +184,10 @@ struct DDVCSEvent : public JObject {
   Vec4 missing;                // k + P - e' - mu+ - mu-
   double mm2 = 0;              // missing mass squared (GeV^2)
   double Q2 = 0, xB = 0, Qprime2 = 0, t = 0, W = 0;  // reconstructed kinematics
+  double phi = 0, cos_theta_l = 0, phi_l = 0;          // Trento phi and lepton-pair angles (DDVCSKinematicsCalc.h)
   double mm2_true = 0;         // from truth four-vectors (should equal Mp^2)
   double Q2_true = 0, xB_true = 0, Qp2_true = 0, t_true = 0;
+  double phi_true = 0, cos_theta_l_true = 0, phi_l_true = 0;
   bool accepted_true = false;  // all three true leptons within acceptance with >= 4 GEM hits each
   bool geom_accepted = false;  // all three true leptons reach their PID detectors (no GEM-hit requirement)
   bool all_matched = false;    // the three reco tracks are matched to the right truth particles
@@ -203,8 +205,10 @@ struct DDVCSEvent : public JObject {
 struct GenKinematics : public JObject {
   JOBJECT_PUBLIC(GenKinematics)
   double Q2 = 0, xB = 0, nu = 0, W = 0, Qp2 = 0, t = 0, tmin = 0, phi_trento = 0, y = 0;
-  double weight = 1.0;
+  double cos_theta_l = 0, phi_l = 0;
+  double weight = 1.0;     // event weight from the generator (1 for the internal generator and EpIC)
   double luminosity = 0;   // cm^-2 s^-1 used for the background model
+  int source = 0;          // 0 = internal phase-space generator, 1 = HepMC3 input (e.g. EpIC)
   void Summarize(JObjectSummary& s) const override {
     s.add(Q2, NAME_OF(Q2), "%.3f", "GeV^2");
     s.add(xB, NAME_OF(xB), "%.3f");

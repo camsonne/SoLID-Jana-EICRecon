@@ -130,8 +130,9 @@ bool DDVCSGenerator::tryGenerate(std::vector<MCParticle>& particles, DDVCSKinema
   add(13, 1, 4, -1, kMuonMass, mum);
   add(-13, 1, 4, +1, kMuonMass, mup);
 
-  kin.Q2 = Q2; kin.xB = xB; kin.nu = nu; kin.W = W; kin.Qp2 = Qp2; kin.t = t; kin.tmin = tmin;
-  kin.phi_trento = phi; kin.y = nu / E; kin.cos_theta_l = cos_tl; kin.phi_l = phi_l;
+  // recomputed from the four-vectors so that the conventions match the reconstruction
+  // (agrees with the sampled Q2, xB, Q'2, t, phi; theta_l/phi_l are in the recoil-proton frame)
+  kin = computeDDVCSKinematics(k, P, kp, mum, mup);
   return true;
 }
 

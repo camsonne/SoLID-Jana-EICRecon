@@ -1,0 +1,135 @@
+<lccdd>
+  <!-- SoLID CLEO-II solenoid: coil, cryostat and iron (solid_gemc geometry/magnet_moved,
+       solid_solenoid__geometry_v2 + solid_solenoid_cryo), converted by scripts/gemc_magnet_to_dd4hep.py.
+       Octagonal pieces are polycones at the octagon flat-face radius (~5% less iron). -->
+  <display>
+    <vis name="MagnetIronVis" r="0.6" g="0.25" b="0.95" alpha="0.3" showDaughters="false" visible="true"/>
+    <vis name="MagnetCoilVis" r="1.0" g="0.5" b="0.07" alpha="0.5" showDaughters="false" visible="true"/>
+  </display>
+  <detectors>
+    <!-- solid_solenoid_InnerOctagon (Pgon) -->
+    <detector id="80" name="MagnetInnerOctagon" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="191.075*cm" rmax="230.142*cm" z="-266.7*cm"/>
+      <zplane rmin="191.075*cm" rmax="230.142*cm" z="209.23*cm"/>
+      <zplane rmin="191.075*cm" rmax="217.692*cm" z="224.79*cm"/>
+    </detector>
+    <!-- solid_solenoid_OuterOctagon (Pgon) -->
+    <detector id="81" name="MagnetOuterOctagon" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="239.763*cm" rmax="278.832*cm" z="-266.7*cm"/>
+      <zplane rmin="239.763*cm" rmax="278.832*cm" z="209.23*cm"/>
+    </detector>
+    <!-- solid_solenoid_SpacerBarUpstream (Pgon) -->
+    <detector id="82" name="MagnetSpacerBarUpstream" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="230.142*cm" rmax="239.763*cm" z="-266.7*cm"/>
+      <zplane rmin="230.142*cm" rmax="239.763*cm" z="-241.2*cm"/>
+    </detector>
+    <!-- solid_solenoid_SpacerBarDownstream (Pgon) -->
+    <detector id="83" name="MagnetSpacerBarDownstream" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="230.142*cm" rmax="239.763*cm" z="182.73*cm"/>
+      <zplane rmin="230.142*cm" rmax="239.763*cm" z="209.23*cm"/>
+    </detector>
+    <!-- solid_solenoid_UpstreamCoilCollar (Pgon) -->
+    <detector id="84" name="MagnetUpstreamCoilCollar" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="144.145*cm" rmax="191.075*cm" z="-266.7*cm"/>
+      <zplane rmin="144.145*cm" rmax="191.075*cm" z="-189.23*cm"/>
+    </detector>
+    <!-- solid_solenoid_UpstreamPlug (Pgon) -->
+    <detector id="85" name="MagnetUpstreamPlug" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="38.94*cm" rmax="144.145*cm" z="-266.7*cm"/>
+      <zplane rmin="66.19*cm" rmax="144.145*cm" z="-208.28*cm"/>
+    </detector>
+    <!-- solid_solenoid_DownstreamCoilCollar (Pgon) -->
+    <detector id="86" name="MagnetDownstreamCoilCollar" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="144*cm" rmax="191.075*cm" z="189.23*cm"/>
+      <zplane rmin="144*cm" rmax="191.075*cm" z="199.23*cm"/>
+      <zplane rmin="164.447*cm" rmax="191.075*cm" z="224.79*cm"/>
+    </detector>
+    <!-- solid_solenoid_EndcapInterface (Pgon) -->
+    <detector id="87" name="MagnetEndcapInterface" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="278.832*cm" rmax="286.51*cm" z="183.83*cm"/>
+      <zplane rmin="278.832*cm" rmax="286.51*cm" z="209.23*cm"/>
+    </detector>
+    <!-- solid_solenoid_EndcapNoseCone (Polycone) -->
+    <detector id="88" name="MagnetEndcapNoseCone" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="19*cm" rmax="61*cm" z="189.23*cm"/>
+      <zplane rmin="19.85*cm" rmax="68.759*cm" z="210*cm"/>
+      <zplane rmin="25.28*cm" rmax="85*cm" z="342.27*cm"/>
+      <zplane rmin="35*cm" rmax="85*cm" z="579.12*cm"/>
+    </detector>
+    <!-- solid_solenoid_EndcapCylinder (Polycone) -->
+    <detector id="89" name="MagnetEndcapCylinder" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="270*cm" rmax="286.51*cm" z="209.23*cm"/>
+      <zplane rmin="270*cm" rmax="286.51*cm" z="529.59*cm"/>
+    </detector>
+    <!-- solid_solenoid_Endplate1 (Polycone) -->
+    <detector id="90" name="MagnetEndplate1" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="85*cm" rmax="286.51*cm" z="529.59*cm"/>
+      <zplane rmin="85*cm" rmax="286.51*cm" z="546.1*cm"/>
+    </detector>
+    <!-- solid_solenoid_Endplate2 (Polycone) -->
+    <detector id="91" name="MagnetEndplate2" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="85*cm" rmax="286.51*cm" z="546.1*cm"/>
+      <zplane rmin="85*cm" rmax="286.51*cm" z="562.61*cm"/>
+    </detector>
+    <!-- solid_solenoid_ConePlate (Polycone) -->
+    <detector id="92" name="MagnetConePlate" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="85*cm" rmax="213.36*cm" z="562.61*cm"/>
+      <zplane rmin="85*cm" rmax="196.85*cm" z="579.12*cm"/>
+    </detector>
+    <!-- solid_solenoid_CorretorRing (Polycone) -->
+    <detector id="93" name="MagnetCorretorRing" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="Iron"/>
+      <zplane rmin="50.8*cm" rmax="51.435*cm" z="-278*cm"/>
+      <zplane rmin="50.8*cm" rmax="51.435*cm" z="-266.7*cm"/>
+    </detector>
+    <!-- solid_solenoid_coilcorr (Polycone) -->
+    <detector id="94" name="Magnetcoilcorr" type="DD4hep_PolyconeSupport" vis="MagnetCoilVis">
+      <material name="Copper"/>
+      <zplane rmin="40*cm" rmax="49*cm" z="-277*cm"/>
+      <zplane rmin="40*cm" rmax="49*cm" z="-268*cm"/>
+    </detector>
+    <!-- solid_solenoid_cryo_CryostatInner (Tube) -->
+    <detector id="95" name="MagnetCryostatInner" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="StainlessSteel"/>
+      <zplane rmin="144*cm" rmax="144.1*cm" z="-187*cm"/>
+      <zplane rmin="144*cm" rmax="144.1*cm" z="187*cm"/>
+    </detector>
+    <!-- solid_solenoid_cryo_CryostatOuter (Tube) -->
+    <detector id="96" name="MagnetCryostatOuter" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="StainlessSteel"/>
+      <zplane rmin="176.48*cm" rmax="176.59*cm" z="-187*cm"/>
+      <zplane rmin="176.48*cm" rmax="176.59*cm" z="187*cm"/>
+    </detector>
+    <!-- solid_solenoid_cryo_CryostatFlangeUpstream (Tube) -->
+    <detector id="97" name="MagnetCryostatFlangeUpstream" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="StainlessSteel"/>
+      <zplane rmin="144*cm" rmax="176.59*cm" z="-188.995*cm"/>
+      <zplane rmin="144*cm" rmax="176.59*cm" z="-187.005*cm"/>
+    </detector>
+    <!-- solid_solenoid_cryo_CryostatFlangeDownstream (Tube) -->
+    <detector id="98" name="MagnetCryostatFlangeDownstream" type="DD4hep_PolyconeSupport" vis="MagnetIronVis">
+      <material name="StainlessSteel"/>
+      <zplane rmin="144*cm" rmax="176.59*cm" z="187.005*cm"/>
+      <zplane rmin="144*cm" rmax="176.59*cm" z="188.995*cm"/>
+    </detector>
+    <!-- solid_solenoid_cryo_coilCLEO (Polycone) -->
+    <detector id="99" name="MagnetcoilCLEO" type="DD4hep_PolyconeSupport" vis="MagnetCoilVis">
+      <material name="Aluminum"/>
+      <zplane rmin="151.7*cm" rmax="154.9*cm" z="-173.75*cm"/>
+      <zplane rmin="151.7*cm" rmax="154.9*cm" z="173.75*cm"/>
+    </detector>
+  </detectors>
+</lccdd>

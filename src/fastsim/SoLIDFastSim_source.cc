@@ -21,6 +21,13 @@ void SoLIDFastSim_source::Init() {
   cfg.t_slope = m_t_slope(); cfg.tabs_max = m_tabs_max();
   m_gen = std::make_unique<DDVCSGenerator>(cfg, static_cast<unsigned>(m_seed()));
   m_rng.seed(static_cast<unsigned>(m_seed()) + 7919u);
+  if (!m_hepmc_in().empty()) {
+    m_reader = std::make_unique<HepMC3Reader>(m_hepmc_in());
+    if (!m_reader->good()) throw JException("Cannot open HepMC3 input %s", m_hepmc_in().c_str());
+    if (m_hepmc_vertex() != "target" && m_hepmc_vertex() != "file")
+      throw JException("fastsim:hepmc_vertex must be 'target' or 'file'");
+    LOG_INFO(GetLogger()) << "Reading generated events from " << m_hepmc_in() << " (vertex: " << m_hepmc_vertex() << ")";
+  }
 
   BackgroundConfig bcfg;
   bcfg.luminosity = m_luminosity();
@@ -160,13 +167,57 @@ void SoLIDFastSim_source::transport(MCParticle& mc, std::vector<GEMHit>& hits, s
   }
 }
 
+// Next generated event, from the HepMC3 file or the internal generator. Returns false at the
+// end of the input file.
+bool SoLIDFastSim_source::nextEvent(std::vector<MCParticle>& parts) {
+  if (!m_reader) {
+    DDVCSKinematics kin;
+    if (!m_gen->generate(parts, kin)) throw JException("DDVCS generator failed to produce an event");
+    return true;
+  }
+  try {
+    if (!m_reader->next(parts)) {
+      const auto& run = m_reader->runInfo();
+      LOG_INFO(GetLogger()) << "End of HepMC3 input after " << m_emitted << " events"
+                            << (run.tool.empty() ? "" : " (" + run.tool + ")")
+                            << (run.has_xsec ? ", integrated cross section " + std::to_string(run.xsec) + " +- " +
+                                                   std::to_string(run.xsec_err) + " (generator units)"
+                                             : "");
+      return false;
+    }
+  } catch (const std::exception& e) {
+    throw JException("%s", e.what());
+  }
+  if (std::abs(parts[5].pdg) != 13 || std::abs(parts[6].pdg) != 13)
+    throw JException("HepMC3 event %d: lepton pair is %d %d, the SoLID DDVCS chain expects mu- mu+ "
+                     "(EpIC: set decay_type to mu-)", m_reader->eventNumber(), parts[5].pdg, parts[6].pdg);
+  if (m_emitted == 0) {
+    const double Eb = parts[0].p4.E, Eg = m_geo->beamEnergy();
+    if (std::fabs(Eb - Eg) > 1e-3 * Eg)
+      LOG_WARN(GetLogger()) << "HepMC3 beam energy " << Eb << " GeV differs from solid geometry beam energy " << Eg
+                            << " GeV used by the reconstruction";
+    if (parts[1].p4.p.mag() > 1e-3)
+      LOG_WARN(GetLogger()) << "HepMC3 target is not at rest (|p| = " << parts[1].p4.p.mag() * 1e3
+                            << " MeV); the reconstruction assumes a target at rest (EpIC: set hadron_energy to Mp)";
+    if (m_reader->flipped()) LOG_INFO(GetLogger()) << "HepMC3 beam along -z: events rotated by pi around y (SoLID frame)";
+  }
+  if (m_hepmc_vertex() == "target" || !m_reader->vertexInFile()) {
+    const auto& tg = m_geo->target();
+    std::uniform_real_distribution<double> U(-1.0, 1.0);
+    const Vec3 vtx(0, 0, tg.z_center + tg.half_length * U(m_rng));
+    for (auto& mc : parts) mc.vertex = vtx;
+  }
+  return true;
+}
+
 JEventSource::Result SoLIDFastSim_source::Emit(JEvent& event) {
   if (m_nevents() > 0 && m_emitted >= m_nevents()) return Result::FailureFinished;
 
   std::vector<MCParticle> parts;
-  DDVCSKinematics kin;
-  if (!m_gen->generate(parts, kin)) throw JException("DDVCS generator failed to produce an event");
-  if (m_hepmc) m_hepmc->write(m_emitted + 1, parts);
+  if (!nextEvent(parts)) return Result::FailureFinished;
+  const double weight = m_reader ? m_reader->weight() : 1.0;
+  const DDVCSKinematics kin = computeDDVCSKinematics(parts[0].p4, parts[1].p4, parts[2].p4, parts[5].p4, parts[6].p4);
+  if (m_hepmc) m_hepmc->write(m_emitted + 1, parts, weight);
 
   std::vector<GEMHit> hits;
   std::vector<ECCluster> clusters;
@@ -188,6 +239,8 @@ JEventSource::Result SoLIDFastSim_source::Emit(JEvent& event) {
   auto* gk = new GenKinematics();
   gk->Q2 = kin.Q2; gk->xB = kin.xB; gk->nu = kin.nu; gk->W = kin.W; gk->Qp2 = kin.Qp2; gk->t = kin.t;
   gk->tmin = kin.tmin; gk->phi_trento = kin.phi_trento; gk->y = kin.y; gk->luminosity = m_luminosity();
+  gk->cos_theta_l = kin.cos_theta_l; gk->phi_l = kin.phi_l;
+  gk->weight = weight; gk->source = m_reader ? 1 : 0;
 
   event.SetEventNumber(++m_emitted);
   event.SetRunNumber(1);

@@ -37,6 +37,8 @@ private:
   Parameter<std::string> m_bkg_file{this, "gem:background_file", "", "Override file for the background rate parametrisation"};
   Parameter<double> m_bkg_road{this, "fastsim:bkg_road_cm", 3.0, "Half-width of the road in which background hits are generated [cm]"};
   Parameter<double> m_ec_sigma{this, "ec:position_sigma_cm", 1.0, "Calorimeter cluster position resolution [cm]"};
+  Parameter<double> m_ec_cluster_emin{this, "ec:cluster_emin_gev", 0.02,
+      "Minimum sampled energy of a calorimeter cluster [GeV] (a muon MIP deposits ~0.036 GeV in the FAEC shower)"};
   Parameter<double> m_ec_cluster_radius{this, "ec:cluster_radius_cm", 15.0, "Clustering radius for calorimeter hits [cm]"};
   Parameter<double> m_edep_min{this, "gem:edep_min_keV", 0.5, "Minimum energy deposit for a GEM hit [keV]"};
   Parameter<int> m_seed{this, "fastsim:seed", 20250908, "Random seed for digitisation and background"};

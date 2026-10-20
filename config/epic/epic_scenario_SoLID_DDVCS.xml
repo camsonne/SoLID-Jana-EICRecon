@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<!-- EpIC scenario for SoLID DDVCS: e p -> e' p' mu+ mu-, 11 GeV electrons on a fixed LH2 target.
+     Run with EpIC (https://github.com/pawelsznajder/epic, e.g. the partons/epic Docker image):
+         epic --scenario=epic_scenario_SoLID_DDVCS.xml --seed=1
+     then feed the output to the SoLID chain:
+         jana -Pplugins=solid_ddvcs -Pfastsim:hepmc_in=epic_SoLID_DDVCS.hepmc ...          (fast simulation)
+         solid_hepmc_to_solid -i epic_SoLID_DDVCS.hepmc -o ddvcs_solid.hepmc               (for ddsim)
+     For beam-spin asymmetries generate one file per helicity (lepton_helicity = +1 and -1) with the
+     same statistics; EpIC events are unweighted, the integrated cross section is written at the end
+     of the file and printed by the SoLID reader. -->
+<scenario date="2026-10-10" description="SoLID DDVCS, 11 GeV e- on LH2, mu+ mu- pair">
+
+   <task service="DDVCSGeneratorService" method="generate">
+
+      <!-- Subprocess can be "ALL" (DDVCS + BH + interference), "BH" or "DDVCS" -->
+      <general_configuration>
+         <param name="number_of_events" value="100000" />
+         <param name="histogram_file_path" value="epic_SoLID_DDVCS_hist.root" />
+         <param name="subprocess_type" value="ALL" />
+      </general_configuration>
+
+      <!-- Kinematic limits: the SoLID DDVCS region used by the internal phase-space generator
+           (Q2 1-6 GeV2, Q'2 2-9 GeV2, xB 0.10-0.55, |t| < 1.5 GeV2). Angles in rad.
+           phi and phiL stay 0.05 rad away from 0 and 2 pi, and thetaL is limited to [pi/4, 3pi/4], as in
+           the EpIC DDVCS example; this removes the Bethe-Heitler peaks where the leptons are collinear
+           with the beam or recoil. Widen thetaL to study the acceptance for the full decay distribution. -->
+      <kinematic_range>
+         <param name="range_y" value="0.05|0.95" />
+         <param name="range_Q2" value="1.|6." />
+         <param name="range_t" value="-1.5|-0.0001" />
+         <param name="range_Q2Prim" value="2.|9." />
+         <param name="range_phi" value="0.05|6.2331853" />
+         <param name="range_phiS" value="0|2*pi" />
+         <param name="range_phiL" value="0.05|6.2331853" />
+         <param name="range_thetaL" value="0.7853|2.3561" />
+         <param name="range_xB" value="0.10|0.55" />
+      </kinematic_range>
+
+      <!-- Fixed target: hadron_energy = Mp exactly (EpIC sets the target momentum to zero). The EpIC
+           example uses 1.00001*Mp, which corresponds to an 11.05 GeV fixed-target beam and leaves the
+           target moving with 4 MeV/c; the SoLID reconstruction assumes 11 GeV on a target at rest. -->
+      <experimental_conditions>
+         <param name="lepton_energy" value="11." />
+         <param name="lepton_type" value="e-" />
+         <param name="lepton_helicity" value="1" />
+         <param name="hadron_energy" value="Mp" />
+         <param name="hadron_type" value="p" />
+         <param name="hadron_polarisation" value="0.|0.|0." />
+      </experimental_conditions>
+
+      <computation_configuration>
+            <module type="DDVCSProcessModule" name="DDVCSProcessDMSW22">
+               <module type="DDVCSScalesModule" name="DDVCSScalesVirtualitiesSum">
+               </module>
+               <module type="DDVCSXiConverterModule" name="DDVCSXiConverterTNeglected">
+               </module>
+               <module type="DDVCSConvolCoeffFunctionModule" name="DDVCSCFFTables">
+                  <param name="qcd_order_type" value="LO" />
+               </module>
+            </module>
+      </computation_configuration>
+
+      <generator_configuration>
+         <module type="EventGeneratorModule" name="EventGeneratorFOAM">
+            <param name="nCells" value="2000" />
+            <param name="nSamples" value="2000" />
+            <param name="nBins" value="200" />
+         </module>
+      </generator_configuration>
+
+      <!-- muon pair: the SoLID DDVCS chain identifies the pair in the muon detector -->
+      <kinematic_configuration>
+         <module type="DDVCSKinematicModule" name="DDVCSKinematicDefault">
+            <param name="decay_type" value="mu-" />
+         </module>
+      </kinematic_configuration>
+
+      <rc_configuration>
+         <module type="DDVCSRCModule" name="DDVCSRCNull">
+         </module>
+      </rc_configuration>
+
+      <writer_configuration>
+         <module type="WriterModule" name="WriterHepMC3">
+            <param name="output_file_path" value="epic_SoLID_DDVCS.hepmc" />
+            <param name="HepMC3_writer_type" value="ascii" />
+         </module>
+      </writer_configuration>
+
+   </task>
+
+</scenario>

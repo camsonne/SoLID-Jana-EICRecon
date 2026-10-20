@@ -55,7 +55,8 @@ void DDVCSAnalysis_processor::Init() {
   m_out.open(m_csv());
   m_out << "event,Q2_true,xB_true,Qp2_true,t_true,geom_accepted,accepted,found,all_matched,mm2,mm2_true,Q2,Qp2,t,"
            "pe_true,pe_reco,the_true,the_reco,pmup_true,pmup_reco,pmum_true,pmum_reco,"
-           "ntracks,nhits_e,nhits_mup,nhits_mum,nbkg_e,nbkg_mup,nbkg_mum,chi2ndf_e,chi2ndf_mup,chi2ndf_mum\n";
+           "ntracks,nhits_e,nhits_mup,nhits_mum,nbkg_e,nbkg_mup,nbkg_mum,chi2ndf_e,chi2ndf_mup,chi2ndf_mum,"
+           "phi_true,phi,costhl_true,costhl,phil_true,phil,weight\n";
   m_out << std::setprecision(7);
 }
 
@@ -65,12 +66,38 @@ void DDVCSAnalysis_processor::ProcessSequential(const JEvent& event) {
   const DDVCSEvent& ev = *evs[0];
   const auto& tracks = m_tracks_in();
   const auto& mcs = m_mc_in();
-  if (!m_gen_in().empty()) m_lumi = m_gen_in()[0]->luminosity;
+  double weight = 1.0;
+  if (!m_gen_in().empty()) {
+    m_lumi = m_gen_in()[0]->luminosity;
+    weight = m_gen_in()[0]->weight;
+    m_gen_source = m_gen_in()[0]->source;
+  }
+  m_weight_sum += weight;
+  if (ev.found) m_weight_sum_found += weight;
 
   ++m_n_events;
   if (ev.geom_accepted) ++m_n_geom;
   if (ev.geom_accepted && ev.found) ++m_n_found_geom;
-  if (ev.accepted_true) ++m_n_accepted;
+  if (ev.accepted_true) {
+    ++m_n_accepted;
+    // which lepton is lost: no matched track, or a track that fails the calorimeter / muon-detector
+    // extrapolation used for identification
+    const int pdgs[3] = {11, -13, 13};
+    for (int l = 0; l < 3; ++l) {
+      int mci = -1;
+      for (const auto* mc : m_mc_in()) if (mc->status == 1 && mc->pdg == pdgs[l]) { mci = mc->index; break; }
+      if (mci < 0) continue;
+      ++m_lep_total[l];
+      bool tracked = false, pid = false;
+      for (const auto* t : m_tracks_in()) {
+        if (t->mc_index != mci) continue;
+        tracked = true;
+        if (l == 0 ? (t->reaches_faec || t->reaches_laec) : (t->reaches_fa_muon || t->reaches_la_muon)) pid = true;
+      }
+      m_lep_tracked[l] += tracked;
+      m_lep_pid_ok[l] += pid;
+    }
+  }
   if (ev.found) ++m_n_found;
   if (ev.found && ev.accepted_true) ++m_n_found_accepted;
   if (ev.found && ev.all_matched) ++m_n_all_matched;
@@ -108,6 +135,9 @@ void DDVCSAnalysis_processor::ProcessSequential(const JEvent& event) {
     m_dQ2.add(ev.Q2 - ev.Q2_true);
     m_dQp2.add(ev.Qprime2 - ev.Qp2_true);
     m_dt.add(ev.t - ev.t_true);
+    m_dphi.add(std::remainder(ev.phi - ev.phi_true, 2 * M_PI));
+    m_dcos_thl.add(ev.cos_theta_l - ev.cos_theta_l_true);
+    m_dphi_l.add(std::remainder(ev.phi_l - ev.phi_l_true, 2 * M_PI));
   }
 
   auto tv = [](const Track* t, auto f, double def = 0) { return t ? f(t) : def; };
@@ -125,7 +155,9 @@ void DDVCSAnalysis_processor::ProcessSequential(const JEvent& event) {
         << tv(tm, [](const Track* t) { return double(t->n_bkg_hits); }) << ","
         << tv(te, [](const Track* t) { return t->chi2 / std::max(1, t->ndf); }) << ","
         << tv(tp, [](const Track* t) { return t->chi2 / std::max(1, t->ndf); }) << ","
-        << tv(tm, [](const Track* t) { return t->chi2 / std::max(1, t->ndf); }) << "\n";
+        << tv(tm, [](const Track* t) { return t->chi2 / std::max(1, t->ndf); }) << ","
+        << ev.phi_true << "," << ev.phi << "," << ev.cos_theta_l_true << "," << ev.cos_theta_l << ","
+        << ev.phi_l_true << "," << ev.phi_l << "," << weight << "\n";
 }
 
 void DDVCSAnalysis_processor::Finish() {
@@ -141,7 +173,10 @@ void DDVCSAnalysis_processor::Finish() {
   js << "{\n";
   js << "  \"label\": \"" << m_label() << "\",\n";
   js << "  \"luminosity\": " << m_lumi << ",\n";
+  js << "  \"generator\": \"" << (m_gen_source == 1 ? "hepmc3" : "internal") << "\",\n";
   js << "  \"n_events\": " << m_n_events << ",\n";
+  js << "  \"weight_sum\": " << m_weight_sum << ",\n";
+  js << "  \"weight_sum_found\": " << m_weight_sum_found << ",\n";
   js << "  \"n_geom_accepted\": " << m_n_geom << ",\n";
   js << "  \"n_found_geom_accepted\": " << m_n_found_geom << ",\n";
   js << "  \"geometric_acceptance\": " << (m_n_events ? double(m_n_geom) / m_n_events : 0) << ",\n";
@@ -153,6 +188,11 @@ void DDVCSAnalysis_processor::Finish() {
   js << "  \"acceptance\": " << (m_n_events ? double(m_n_accepted) / m_n_events : 0) << ",\n";
   js << "  \"reco_efficiency_in_acceptance\": " << (m_n_accepted ? double(m_n_found_accepted) / m_n_accepted : 0) << ",\n";
   js << "  \"n_tracks\": " << m_n_tracks << ",\n";
+  const char* lname[3] = {"electron", "muplus", "muminus"};
+  for (int l = 0; l < 3; ++l)
+    js << "  \"accepted_" << lname[l] << "\": {\"n\": " << m_lep_total[l] << ", \"tracked\": "
+       << (m_lep_total[l] ? double(m_lep_tracked[l]) / m_lep_total[l] : 0) << ", \"tracked_and_pid\": "
+       << (m_lep_total[l] ? double(m_lep_pid_ok[l]) / m_lep_total[l] : 0) << "},\n";
   js << "  \"frac_tracks_with_bkg_hit\": " << (m_n_tracks ? double(m_n_tracks_with_bkg) / m_n_tracks : 0) << ",\n";
   js << "  \"frac_fake_tracks\": " << (m_n_tracks ? double(m_n_fake_tracks) / m_n_tracks : 0) << ",\n";
   stat("mm2", m_mm2);
@@ -167,6 +207,9 @@ void DDVCSAnalysis_processor::Finish() {
   stat("dQ2", m_dQ2);
   stat("dQprime2", m_dQp2);
   stat("dt", m_dt);
+  stat("dphi_trento", m_dphi);
+  stat("dcos_theta_l", m_dcos_thl);
+  stat("dphi_l", m_dphi_l);
   stat("chi2ndf", m_chi2ndf, true);
   js << "}\n";
   js.close();

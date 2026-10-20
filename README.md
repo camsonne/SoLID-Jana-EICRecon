@@ -7,16 +7,22 @@ luminosities of **10³⁸ and 10³⁹ cm⁻² s⁻¹** (and the 1.2×10³⁷ J/�
 
 The results of the luminosity scan are in [`results/RESULTS.md`](results/RESULTS.md).
 
+**Overview of all studies (luminosity scan, background, EpIC, ACTS, GNN, Geant4), their results and
+the open items to contribute to: [`STUDIES.md`](STUDIES.md).**
+
 ## What is in the repository
 
 | Path | Content |
 |---|---|
 | `geometry/solid_ddvcs.xml`, `geometry/compact/` | DD4hep compact description of the DDVCS configuration: LH2 target, DDVCS GEM tracker (6 planes, planes 1–4 extended to R = 135 cm), LGC/HGC, LAEC/FAEC, SPD, MRPC, DDVCS muon detector (iron + scintillator). Detector plugins (`SoLID_*`) come from [JeffersonLab/solid_dd4hep](https://github.com/JeffersonLab/solid_dd4hep); positions follow `solid_gemc` (`gem_moved/solid_SIDIS_DDVCS_gem`, `prototype/muon_pro`). |
 | `scripts/run_ddsim_ddvcs.py` | DDG4 steering for the full Geant4 simulation (HepMC3 in, EDM4hep/podio out). |
-| `src/generator/` | DDVCS kinematics generator (`solid_ddvcs_gen`, HepMC3 ASCII output) — phase-space with importance sampling in the SoLID DDVCS region; weight 1, no amplitude. |
+| `src/generator/` | DDVCS kinematics generator (`solid_ddvcs_gen`, HepMC3 ASCII output) — phase-space with importance sampling in the SoLID DDVCS region; weight 1, no amplitude. `HepMC3Reader` reads physics events from [EpIC](https://github.com/pawelsznajder/epic) (DDVCS + BH cross section), `solid_hepmc_to_solid` converts them for ddsim, and `DDVCSKinematicsCalc.h` computes Q², x_B, Q′², t, the Trento φ and the lepton-pair angles θ_ℓ, φ_ℓ with EpIC's conventions, for truth and reconstruction alike. |
+| `config/epic/` | EpIC scenario for SoLID DDVCS (11 GeV e⁻ on LH2, μ⁺μ⁻ pair). |
 | `src/services/` | `SoLIDGeometry_service` (DDVCS geometry parameters) and `SoLIDField_service` (CLEO-II solenoid: Biot–Savart model of the coil packs from `solid_gemc/field/CLEOv9.am`, or the `solenoid_CLEOv9.dat` map when available). |
 | `src/fastsim/` | `SoLIDFastSim_source`: generator + RK4 transport in the solenoid field, multiple scattering (target, air, GEM planes), GEM hit smearing/efficiency, calorimeter clusters, muon-detector acceptance and a **luminosity-scaled background model** (`BackgroundModel`: rate density per plane vs radius, GEM time window, strip vs pixel readout, cluster-overlap losses, u/v ghost hits). |
-| `src/reco/` | `TrackPropagator` (RK4), `TrackFitter` (global χ² fit of (q/p, θ, φ, z_v) with the SoLID beam-line vertex constraint and a full multiple-scattering covariance), `TrackFinder_factory` (calorimeter-seeded progressive track finding), `DDVCSReco_factory` (e', μ⁺, μ⁻ selection and missing mass). |
+| `src/acts/` | ACTS tracking (`tracking:engine=acts`, default when built with `-DUSE_ACTS=ON`): `SoLIDActs_service` (ACTS tracking geometry of the GEM planes and the SoLID field as an ACTS field provider), `ActsTrackFinder_factory` (ACTS triplet seeding, seed pre-fit, Combinatorial Kalman Filter, greedy ambiguity resolution, beam-line constraint). |
+| `src/gnn/`, `scripts/gnn/`, `config/gnn/` | GNN tracking (`tracking:engine=gnn`, `-DUSE_ONNX=ON`): hit-graph construction (`GNNGraph`), training-data export (`-Pgnn:dump=<prefix>`), Interaction-Network training and ONNX export (`train_gnn.py`), ONNX Runtime inference (`GNNEdgeClassifier`), track building and fit (`GNNTrackFinder_factory`), trained model `solid_gem_in.onnx`. |
+| `src/reco/` | Native tracker (`tracking:engine=native`): `TrackPropagator` (RK4), `TrackFitter` (global χ² fit of (q/p, θ, φ, z_v) with the SoLID beam-line vertex constraint and a full multiple-scattering covariance), `TrackFinder_factory` (calorimeter-seeded progressive track finding). `DDVCSReco_factory` (e', μ⁺, μ⁻ selection and missing mass) serves both engines. |
 | `src/analysis/` | `DDVCSAnalysis_processor`: per-event CSV and JSON summary (acceptance, efficiency, resolutions). |
 | `src/io/SoLIDEDM4hep_source` | Reader for ddsim output (EDM4hep), digitises `GEMTrackerHits`, clusters the calorimeter hits, flags muon-detector hits. Built with `-DUSE_EDM4HEP=ON`. |
 | `scripts/run_ddvcs_lumi_scan.sh`, `scripts/plot_ddvcs_results.py` | Luminosity scan driver and plots/tables. |
@@ -41,6 +47,26 @@ ctest --test-dir build
 ```
 
 Add `-DUSE_EDM4HEP=ON` (needs podio and EDM4hep ≥ 0.99) to build the ddsim reader.
+
+**ACTS tracking** (`-DUSE_ACTS=ON`): needs [ACTS](https://github.com/acts-project/acts) ≥ 46 (Core
+only; the code is developed against 46.8.1, the version in eic-shell) and switches the build to
+C++20. ACTS is then the default tracking engine; `-Ptracking:engine=native` selects the built-in
+tracker.
+
+```bash
+# inside eic-shell ACTS is already installed; otherwise (needs Eigen3 >= 3.4 and Boost >= 1.78)
+git clone --branch v46.8.1 --depth 1 https://github.com/acts-project/acts
+cmake -S acts -B acts/build -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=$PWD/acts-install \
+      -DACTS_BUILD_EXAMPLES=OFF -DACTS_BUILD_UNITTESTS=OFF -DACTS_BUILD_INTEGRATIONTESTS=OFF
+cmake --build acts/build -j4 && cmake --install acts/build
+
+cmake -S . -B build -DUSE_ACTS=ON -DCMAKE_PREFIX_PATH="$PWD/jana2-install;$PWD/acts-install"
+```
+
+**GNN tracking** (`-DUSE_ONNX=ON`): needs ONNX Runtime ≥ 1.17. The CMake package from eic-shell
+is used when available; otherwise set `-DONNXRUNTIME_ROOT=<dir>` to a directory with
+`include/onnxruntime_cxx_api.h` and `lib/libonnxruntime.so` (for example the official release
+tarball). Selected with `-Ptracking:engine=gnn`.
 
 ## Running the fast-simulation + reconstruction chain
 
@@ -69,6 +95,46 @@ Useful parameters (all have `-Pname=value` form; `jana -Pplugins=solid_ddvcs -Pj
 | `solid:muon_pmin` | 2.0 | Minimum momentum to traverse FAEC + 108 cm Fe to the last muon scintillator [GeV] |
 | `ddvcs:Q2_min/max`, `ddvcs:Qp2_min/max`, `ddvcs:xB_min/max`, `ddvcs:tabs_max` | 1–6, 2–9, 0.10–0.55, 1.5 | Generator ranges |
 | `fastsim:hepmc_out` | — | Also write the generated events as HepMC3 |
+| `fastsim:hepmc_in` | — | Read the events from a HepMC3 ASCII file (EpIC) instead of the internal generator |
+| `fastsim:hepmc_vertex` | target | `target`: vertex uniform along the LH2 cell (EpIC writes none); `file`: use the file's vertex |
+
+## Physics events from EpIC
+
+[EpIC](https://github.com/pawelsznajder/epic) (PARTONS-based; `DDVCSGeneratorService`, model
+`DDVCSProcessDMSW22`) generates unweighted DDVCS + Bethe–Heitler events with beam helicity, and is the
+event generator for the physics analysis. The internal generator remains for pure acceptance and
+resolution studies.
+
+```bash
+# 1. generate (EpIC installation or the partons/epic Docker image); one file per beam helicity
+epic --scenario=config/epic/epic_scenario_SoLID_DDVCS.xml --seed=1        # -> epic_SoLID_DDVCS.hepmc
+
+# 2a. fast simulation + reconstruction on the EpIC events
+jana -Pplugins=solid_ddvcs -Pfastsim:hepmc_in=epic_SoLID_DDVCS.hepmc -Psolid:luminosity=1e38 -Pgem:readout=pixel \
+     -Panalysis:output=epic_L1e38_pixel_events.csv -Panalysis:summary=epic_L1e38_pixel_summary.json
+
+# 2b. or convert for the Geant4 path (beam along +z, vertex in the target) and run ddsim on it
+build/src/solid_hepmc_to_solid -i epic_SoLID_DDVCS.hepmc -o ddvcs_solid.hepmc
+```
+
+What the reader does with EpIC files:
+
+* **Frame.** EpIC puts the lepton beam along −z (collider convention). Such events are rotated by π
+  around y, so the beam points along +z as in SoLID; kinematics and angles are unchanged.
+* **Fixed target.** Use `hadron_energy = Mp` (as in the provided scenario). The EpIC example's
+  `1.00001*Mp` corresponds to an 11.05 GeV fixed-target beam and leaves the proton moving at 4 MeV/c.
+  The source warns when the target is not at rest or the beam energy differs from `solid:beam_energy`.
+* **Event record.** e, p, e′, p′, γ*, ℓ⁻, ℓ⁺ are identified from the vertex structure (status 4 beams,
+  status 1 final state, ℓ pair produced by the outgoing γ*). Additional final-state particles, such as
+  photons from EpIC radiative corrections, are kept. The pair must be μ⁺μ⁻ (`decay_type = mu-`).
+* **Vertex.** EpIC writes none, so the vertex is placed uniformly along the 15 cm target.
+* **Cross section.** EpIC events are unweighted. The integrated cross section is written after the
+  last event and logged at the end of the run; the event weight goes to `GenKinematics::weight`, the
+  `weight` CSV column and `weight_sum` in the JSON summary.
+* **Angles.** `phi` (Trento, target rest frame), `costhl` and `phil` (ℓ⁻ relative to the recoil
+  proton in the ℓℓ rest frame) in the analysis CSV are exactly EpIC's `phi`, `cos(thetaL)` and
+  `phiL`. `tests/test_hepmc_reader.cc` checks this to 1e-12 on events built with EpIC's own
+  construction (`tests/make_epic_like_hepmc.py`). EpIC itself is not run in the tests.
 
 ## Full Geant4 simulation path
 
@@ -81,9 +147,13 @@ jana -Pplugins=solid_ddvcs -Psolid:source=edm4hep -Psolid:luminosity=1e38 ddvcs_
 
 The same tracking, DDVCS reconstruction and analysis run on the Geant4 hits; the background
 model is applied on top of the simulated hits in the same way as in the fast simulation.
-The compact files have been written against the `solid_dd4hep` plugin interfaces but could not
-be executed in the environment used to develop this package (no DD4hep/Geant4 available), so
-expect to iterate on them the first time they are loaded.
+Use the CLEO field map in the reconstruction (`-Pfield:mode=map -Pfield:map=solenoid_CLEOv9.dat`),
+the same map Geant4 uses.
+
+The full simulation has now run end to end (geometry, Geant4, EDM4hep, all three tracking engines).
+The fixes it required and the comparison with the fast simulation on the same events are in
+[`docs/geant4_simulation.md`](docs/geant4_simulation.md); `scripts/geant4/setup_stack.sh` builds the
+stack outside eic-shell.
 
 ## Physics and detector model
 
@@ -96,7 +166,17 @@ expect to iterate on them the first time they are loaded.
 * **Field**: Biot–Savart field of the CLEO-II coil packs (r = 152.5/154.1 cm, z = ±173.8 cm) scaled
   to 1.5 T at the centre. The iron yoke is not modelled, so the fringe field at the target differs
   from the real map; use `field:mode=map field:map=solenoid_CLEOv9.dat` when the map is available.
-* **Tracking**: hits are 2D points with 70 µm resolution; the fit propagates with RK4 in the field
+* **Tracking (ACTS, default with `-DUSE_ACTS=ON`)**: ACTS triplet seeding, a seed pre-fit,
+  Combinatorial Kalman Filter, greedy ambiguity resolution, the beam-line constraint and target
+  multiple scattering at the vertex, and a calorimeter match. Its resolution equals the native
+  tracker's; efficiency is equal or better, and it runs 3–7× faster. Details and the
+  side-by-side luminosity scan are in [`docs/acts_tracking.md`](docs/acts_tracking.md).
+* **Tracking (GNN, `tracking:engine=gnn`, needs `-DUSE_ONNX=ON`)**: an Interaction-Network edge
+  classifier on the GEM hit graph (trained in PyTorch, run through ONNX Runtime), walkthrough track
+  building, and the native fitter. It matches the other engines at low occupancy and keeps the
+  fewest fake tracks at 10³⁹. Training, model and the three-engine comparison are in
+  [`docs/gnn_tracking.md`](docs/gnn_tracking.md).
+* **Tracking (native, `tracking:engine=native`)**: hits are 2D points with 70 µm resolution; the fit propagates with RK4 in the field
   and uses a measurement covariance that includes the multiple scattering in the target (LH2 +
   Al wall), the air between planes and the GEM planes (0.7 % X₀ each), so χ²/ndf ≈ 1 and the
   parameter errors are realistic. Tracks are seeded from a calorimeter cluster + a GEM hit + the
@@ -113,7 +193,8 @@ expect to iterate on them the first time they are loaded.
   Cherenkov, calorimeter and muon-detector responses are not simulated. Background in the
   calorimeters is not simulated.
 * **Not included**: bremsstrahlung/energy loss of the leptons in the target and detectors, the
-  physical DDVCS + Bethe–Heitler cross section (all events have weight 1), and pile-up in the
+  physical DDVCS + Bethe–Heitler cross section in the internal generator (all events have weight 1;
+  use EpIC events for it), and pile-up in the
   calorimeters.
 
 ## Results

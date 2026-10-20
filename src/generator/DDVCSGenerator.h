@@ -14,6 +14,7 @@
 #include <random>
 #include <vector>
 #include "datamodel/SoLIDDataModel.h"
+#include "generator/DDVCSKinematicsCalc.h"
 
 namespace solid {
 
@@ -28,11 +29,6 @@ struct DDVCSConfig {
   double target_z = -315.0, target_half_length = 7.5;  // cm
   double beam_sigma_xy = 0.0;            // cm (rastered beam position is assumed known)
   double Ep_min = 0.5;                   // GeV, scattered electron energy floor
-};
-
-struct DDVCSKinematics {
-  double Q2 = 0, xB = 0, nu = 0, W = 0, Qp2 = 0, t = 0, tmin = 0, phi_trento = 0, y = 0;
-  double cos_theta_l = 0, phi_l = 0;
 };
 
 class DDVCSGenerator {
