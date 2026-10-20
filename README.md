@@ -7,6 +7,9 @@ luminosities of **10³⁸ and 10³⁹ cm⁻² s⁻¹** (and the 1.2×10³⁷ J/�
 
 The results of the luminosity scan are in [`results/RESULTS.md`](results/RESULTS.md).
 
+**Overview of all studies (luminosity scan, background, EpIC, ACTS, GNN, Geant4), their results and
+the open items to contribute to: [`STUDIES.md`](STUDIES.md).**
+
 ## What is in the repository
 
 | Path | Content |
